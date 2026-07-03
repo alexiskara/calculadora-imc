@@ -229,6 +229,10 @@ function iniciarSincronizacao() {
                     }
                 });
                 salvarDados();
+                // Peso alterado → meta de água e equivalências mudam
+                if (grupo.indexOf('peso') !== -1) {
+                    renderizarDiario();
+                }
             });
         });
     });
@@ -503,6 +507,38 @@ const ATIVIDADES = [
     { nome: 'Serviços domésticos', met: 3.5 }
 ];
 
+// Alimentos comuns do dia a dia em medidas caseiras (valores aproximados
+// da tabela TACO, por porção indicada) — para adicionar com um toque
+const ALIMENTOS_RAPIDOS = [
+    { emoji: '🥖', nome: 'Pão francês', medida: '1 unidade', kcal: 150, prot: 4.0, carb: 29.0, gord: 1.6 },
+    { emoji: '🍞', nome: 'Pão de forma', medida: '1 fatia', kcal: 65, prot: 2.3, carb: 12.0, gord: 0.9 },
+    { emoji: '🥚', nome: 'Ovo cozido', medida: '1 unidade', kcal: 73, prot: 6.5, carb: 0.3, gord: 4.8 },
+    { emoji: '🍳', nome: 'Ovo frito', medida: '1 unidade', kcal: 100, prot: 6.8, carb: 0.3, gord: 8.0 },
+    { emoji: '🧀', nome: 'Queijo minas', medida: '1 fatia', kcal: 79, prot: 5.2, carb: 1.0, gord: 6.1 },
+    { emoji: '🥛', nome: 'Leite integral', medida: '1 copo', kcal: 120, prot: 6.4, carb: 9.2, gord: 6.4 },
+    { emoji: '☕', nome: 'Café com açúcar', medida: '1 xícara', kcal: 25, prot: 0.2, carb: 6.0, gord: 0 },
+    { emoji: '🍌', nome: 'Banana', medida: '1 unidade', kcal: 65, prot: 0.9, carb: 16.5, gord: 0.1 },
+    { emoji: '🍎', nome: 'Maçã', medida: '1 unidade', kcal: 72, prot: 0.4, carb: 19.7, gord: 0.2 },
+    { emoji: '🍊', nome: 'Laranja', medida: '1 unidade', kcal: 63, prot: 1.1, carb: 15.7, gord: 0.1 },
+    { emoji: '🍚', nome: 'Arroz branco', medida: '1 colher de servir', kcal: 58, prot: 1.1, carb: 12.6, gord: 0.1 },
+    { emoji: '🫘', nome: 'Feijão', medida: '1 concha', kcal: 65, prot: 4.1, carb: 11.6, gord: 0.4 },
+    { emoji: '🍗', nome: 'Frango grelhado', medida: '1 filé', kcal: 165, prot: 31.0, carb: 0, gord: 3.6 },
+    { emoji: '🥩', nome: 'Carne bovina', medida: '1 bife', kcal: 219, prot: 32.0, carb: 0, gord: 9.0 },
+    { emoji: '🐟', nome: 'Peixe grelhado', medida: '1 filé', kcal: 120, prot: 24.0, carb: 0, gord: 2.5 },
+    { emoji: '🥔', nome: 'Batata cozida', medida: '1 unidade média', kcal: 73, prot: 1.7, carb: 16.7, gord: 0.1 },
+    { emoji: '🍝', nome: 'Macarrão', medida: '1 pegador', kcal: 120, prot: 3.7, carb: 25.0, gord: 0.6 },
+    { emoji: '🥗', nome: 'Salada verde', medida: '1 prato', kcal: 15, prot: 1.0, carb: 2.5, gord: 0.2 },
+    { emoji: '🧃', nome: 'Suco de laranja', medida: '1 copo', kcal: 110, prot: 1.7, carb: 25.0, gord: 0.2 },
+    { emoji: '🥤', nome: 'Refrigerante', medida: '1 copo', kcal: 105, prot: 0, carb: 26.0, gord: 0 },
+    { emoji: '🍕', nome: 'Pizza', medida: '1 fatia', kcal: 280, prot: 12.0, carb: 33.0, gord: 11.0 },
+    { emoji: '🍫', nome: 'Chocolate', medida: '2 quadradinhos', kcal: 135, prot: 1.9, carb: 15.0, gord: 7.9 }
+];
+
+// Água: recomendação de ~35 ml por kg de peso, contada em copos de 250 ml
+const COPO_ML = 250;
+const AGUA_ML_POR_KG = 35;
+const META_AGUA_PADRAO = 2000;
+
 let resultadosBuscaAtual = [];
 
 // Peso atual do usuário (campo sincronizado entre as abas)
@@ -517,12 +553,28 @@ function carregarDiario() {
         const diario = JSON.parse(lerStorage(CHAVE_DIARIO));
         if (diario && diario.data === dataHojeISO() && Array.isArray(diario.itens)) {
             if (!Array.isArray(diario.exercicios)) diario.exercicios = [];
+            if (typeof diario.agua !== 'number' || diario.agua < 0) diario.agua = 0;
+            // Migra itens do formato antigo (gramas sobre valores por 100 g)
+            diario.itens = diario.itens.map(function (item) {
+                if (item.gramas !== undefined) {
+                    return {
+                        nome: item.nome,
+                        medida: '100 g',
+                        kcal: item.kcal,
+                        prot: item.prot,
+                        carb: item.carb,
+                        gord: item.gord,
+                        quantidade: item.gramas / 100
+                    };
+                }
+                return item;
+            });
             return diario;
         }
     } catch (e) {
         // diário corrompido ou de outro dia: começa um novo
     }
-    return { data: dataHojeISO(), itens: [], exercicios: [] };
+    return { data: dataHojeISO(), itens: [], exercicios: [], agua: 0 };
 }
 
 function salvarDiario(diario) {
@@ -583,27 +635,61 @@ function buscarAlimento() {
         });
 }
 
-function adicionarAlimento(indice) {
-    const item = resultadosBuscaAtual[indice];
-    if (!item) return;
+// Insere um item no diário; se já existe o mesmo alimento, soma a quantidade
+function inserirItemDiario(novo) {
     const diario = carregarDiario();
-    diario.itens.push({
-        nome: item.nome,
-        gramas: 100,
-        kcal: item.kcal,
-        prot: item.prot,
-        carb: item.carb,
-        gord: item.gord
+    const existente = diario.itens.find(function (item) {
+        return item.nome === novo.nome && item.medida === novo.medida;
     });
+    if (existente) {
+        existente.quantidade = Math.round((existente.quantidade + novo.quantidade) * 10) / 10;
+    } else {
+        diario.itens.push(novo);
+    }
     salvarDiario(diario);
     renderizarDiario();
 }
 
-function atualizarGramas(indice, valor) {
-    const gramas = parseFloat(valor);
+// Alimento rápido: um toque adiciona 1 porção
+function adicionarRapido(indice) {
+    const alimento = ALIMENTOS_RAPIDOS[indice];
+    if (!alimento) return;
+    inserirItemDiario({
+        nome: alimento.nome,
+        medida: alimento.medida,
+        kcal: alimento.kcal,
+        prot: alimento.prot,
+        carb: alimento.carb,
+        gord: alimento.gord,
+        quantidade: 1
+    });
+}
+
+// Alimento vindo da busca: entra como 1 porção de 100 g
+function adicionarAlimento(indice) {
+    const item = resultadosBuscaAtual[indice];
+    if (!item) return;
+    inserirItemDiario({
+        nome: item.nome,
+        medida: '100 g',
+        kcal: item.kcal,
+        prot: item.prot,
+        carb: item.carb,
+        gord: item.gord,
+        quantidade: 1
+    });
+}
+
+function ajustarQuantidade(indice, delta) {
     const diario = carregarDiario();
-    if (!diario.itens[indice]) return;
-    diario.itens[indice].gramas = isNaN(gramas) || gramas < 1 ? 1 : Math.min(gramas, 3000);
+    const item = diario.itens[indice];
+    if (!item) return;
+    const nova = Math.round((item.quantidade + delta) * 10) / 10;
+    if (nova <= 0) {
+        diario.itens.splice(indice, 1);
+    } else {
+        item.quantidade = Math.min(nova, 50);
+    }
     salvarDiario(diario);
     renderizarDiario();
 }
@@ -616,9 +702,61 @@ function removerAlimento(indice) {
 }
 
 function limparDiario() {
-    if (!confirm('Limpar todos os alimentos e exercícios de hoje?')) return;
-    salvarDiario({ data: dataHojeISO(), itens: [], exercicios: [] });
+    if (!confirm('Limpar todos os alimentos, exercícios e água de hoje?')) return;
+    salvarDiario({ data: dataHojeISO(), itens: [], exercicios: [], agua: 0 });
     renderizarDiario();
+}
+
+// ===== Água do dia =====
+function ajustarAgua(copos) {
+    const diario = carregarDiario();
+    diario.agua = Math.max(0, diario.agua + copos * COPO_ML);
+    salvarDiario(diario);
+    renderizarDiario();
+}
+
+function formatarLitros(ml) {
+    return (ml / 1000).toFixed(1).replace('.', ',') + ' L';
+}
+
+function renderizarAgua(diario) {
+    const div = document.getElementById('aguaDia');
+    const peso = pesoAtualUsuario();
+    // Meta arredondada para múltiplos de 50 ml
+    const metaAgua = peso ? Math.round((peso * AGUA_ML_POR_KG) / 50) * 50 : META_AGUA_PADRAO;
+    const copos = Math.round(diario.agua / COPO_ML);
+    const percentual = Math.round((diario.agua / metaAgua) * 100);
+    const atingiu = diario.agua >= metaAgua;
+
+    const notaMeta = peso
+        ? `Sua meta: ${formatarLitros(metaAgua)} por dia (35 ml por kg)`
+        : `Meta padrão: ${formatarLitros(metaAgua)} — informe seu peso na aba IMC para personalizar`;
+
+    div.innerHTML = `
+        <div class="progresso-texto"><strong>${formatarLitros(diario.agua)}</strong> de <strong>${formatarLitros(metaAgua)}</strong> (${copos} copo${copos === 1 ? '' : 's'})</div>
+        <div class="progresso-track">
+            <div class="progresso-fill agua" style="width: ${Math.min(percentual, 100)}%"></div>
+        </div>
+        <div class="progresso-sub">${atingiu ? 'Meta de água atingida! 💧 Continue se hidratando.' : notaMeta}</div>
+        <div class="agua-botoes">
+            <button type="button" class="btn-secundario agua-menos" onclick="ajustarAgua(-1)" ${diario.agua === 0 ? 'disabled' : ''}>−</button>
+            <button type="button" class="agua-mais" onclick="ajustarAgua(1)">💧 Bebi 1 copo (250 ml)</button>
+        </div>
+    `;
+}
+
+// Grade de atalhos de alimentos comuns (montada uma vez na inicialização)
+function renderizarAtalhos() {
+    let html = '';
+    ALIMENTOS_RAPIDOS.forEach(function (alimento, indice) {
+        html += `
+            <button type="button" class="chip" onclick="adicionarRapido(${indice})" title="${alimento.medida} · ${alimento.kcal} kcal">
+                <span class="chip-emoji">${alimento.emoji}</span>
+                <span class="chip-nome">${alimento.nome}</span>
+                <span class="chip-kcal">${alimento.kcal} kcal</span>
+            </button>`;
+    });
+    document.getElementById('atalhosAlimentos').innerHTML = html;
 }
 
 // ===== Exercícios do dia =====
@@ -689,14 +827,15 @@ function renderizarDiario() {
         // sem meta definida ainda
     }
 
-    // Totais consumidos
+    renderizarAgua(diario);
+
+    // Totais consumidos (valores por porção × quantidade)
     const total = { kcal: 0, prot: 0, carb: 0, gord: 0 };
     diario.itens.forEach(function (item) {
-        const fator = item.gramas / 100;
-        total.kcal += item.kcal * fator;
-        total.prot += item.prot * fator;
-        total.carb += item.carb * fator;
-        total.gord += item.gord * fator;
+        total.kcal += item.kcal * item.quantidade;
+        total.prot += item.prot * item.quantidade;
+        total.carb += item.carb * item.quantidade;
+        total.gord += item.gord * item.quantidade;
     });
 
     // Calorias queimadas em exercícios: viram crédito na meta do dia
@@ -734,19 +873,24 @@ function renderizarDiario() {
 
     // Lista de alimentos do dia
     if (diario.itens.length === 0) {
-        listaDiv.innerHTML = '<div class="mensagem busca-status">Nenhum alimento registrado hoje. Busque acima e adicione com o botão +.</div>';
+        listaDiv.innerHTML = '<div class="mensagem busca-status">Nenhum alimento registrado hoje. Toque nos alimentos acima para adicionar.</div>';
     } else {
         let linhas = '';
         diario.itens.forEach(function (item, indice) {
-            const fator = item.gramas / 100;
+            const qtd = item.quantidade;
+            // Ex.: "2 × 1 unidade" ou, para itens da busca, "150 g"
+            const rotuloQtd = item.medida === '100 g'
+                ? (qtd * 100).toFixed(0) + ' g'
+                : String(qtd).replace('.', ',') + ' × ' + item.medida;
             linhas += `
                 <div class="diario-linha">
                     <div class="alimento-info">
                         <div class="alimento-nome">${escapeHTML(item.nome)}</div>
-                        <div class="alimento-macros">${Math.round(item.kcal * fator)} kcal · P ${(item.prot * fator).toFixed(1)} g · C ${(item.carb * fator).toFixed(1)} g · G ${(item.gord * fator).toFixed(1)} g</div>
+                        <div class="alimento-macros">${rotuloQtd} · <strong>${Math.round(item.kcal * qtd)} kcal</strong> · P ${(item.prot * qtd).toFixed(1)} g · C ${(item.carb * qtd).toFixed(1)} g · G ${(item.gord * qtd).toFixed(1)} g</div>
                     </div>
-                    <div class="diario-gramas">
-                        <input type="number" value="${item.gramas}" min="1" max="3000" onchange="atualizarGramas(${indice}, this.value)"> g
+                    <div class="qtd-controle">
+                        <button type="button" class="qtd-btn" title="Diminuir" onclick="ajustarQuantidade(${indice}, -0.5)">−</button>
+                        <button type="button" class="qtd-btn" title="Aumentar" onclick="ajustarQuantidade(${indice}, 0.5)">+</button>
                     </div>
                     <button type="button" class="hist-remover" title="Remover" onclick="removerAlimento(${indice})">×</button>
                 </div>`;
@@ -1075,6 +1219,7 @@ function renderizarHistorico() {
 restaurarDados();
 iniciarSincronizacao();
 preencherAtividades();
+renderizarAtalhos();
 renderizarHistorico();
 renderizarDiario();
 iniciarLembrete();

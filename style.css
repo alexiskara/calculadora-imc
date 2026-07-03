@@ -580,20 +580,116 @@ button:hover {
     flex: none;
 }
 
-.diario-gramas {
+.qtd-controle {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 13px;
-    color: #666;
+    gap: 6px;
     flex: none;
 }
 
-.diario-gramas input {
-    width: 62px;
-    padding: 6px;
+.qtd-btn {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    font-size: 18px;
+    line-height: 1;
+    border-radius: 50%;
+    background: #f0f2f7;
+    color: #444;
+    flex: none;
+}
+
+.qtd-btn:hover {
+    background: #e2e6f0;
+    color: #111;
+}
+
+/* ===== Atalhos de alimentos comuns ===== */
+.dica {
     font-size: 13px;
-    text-align: right;
+    color: #888;
+    margin: 4px 0 10px;
+    text-align: left;
+}
+
+.atalhos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.chip {
+    flex: 1 1 30%;
+    min-width: 30%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: #f7f8fc;
+    border: 1px solid #e6e9f2;
+    color: #444;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 10px 4px 8px;
+    border-radius: 12px;
+}
+
+.chip:hover {
+    background: #eef1f9;
+    border-color: #c9d4f0;
+}
+
+.chip:active {
+    background: #e0e7fa;
+}
+
+.chip-emoji {
+    font-size: 22px;
+    line-height: 1;
+}
+
+.chip-nome {
+    line-height: 1.2;
+}
+
+.chip-kcal {
+    font-size: 10px;
+    font-weight: normal;
+    color: #999;
+}
+
+/* ===== Água ===== */
+.progresso-fill.agua {
+    background: #0284c7;
+}
+
+.agua-botoes {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.agua-menos {
+    flex: 0 0 56px;
+    font-size: 20px;
+    padding: 10px 0;
+}
+
+.agua-menos:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.agua-mais {
+    flex: 1;
+    padding: 12px;
+    font-size: 15px;
+    background: linear-gradient(135deg, #0284c7, #2575fc);
+}
+
+.agua-mais:hover {
+    background: linear-gradient(135deg, #0270a8, #1b5fd6);
 }
 
 .diario-total {

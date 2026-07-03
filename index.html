@@ -96,11 +96,16 @@
         <div class="tab-content" id="aba-alimentos">
             <h1>Diário do Dia</h1>
             <div class="result" id="metaDia"></div>
+            <h2 class="subtitulo">Água</h2>
+            <div class="result" id="aguaDia"></div>
+            <h2 class="subtitulo">O que você comeu?</h2>
+            <p class="dica">Toque no alimento para adicionar 1 porção. Tocou de novo? Soma mais uma.</p>
+            <div class="atalhos" id="atalhosAlimentos"></div>
             <form onsubmit="event.preventDefault(); buscarAlimento();">
                 <div class="input-group">
-                    <label for="buscaAlimento">Buscar alimento:</label>
+                    <label for="buscaAlimento">Não achou acima? Busque qualquer alimento:</label>
                     <div class="busca-linha">
-                        <input type="text" id="buscaAlimento" placeholder="Ex: arroz integral">
+                        <input type="text" id="buscaAlimento" placeholder="Ex: iogurte grego">
                         <button type="submit" class="btn-buscar">Buscar</button>
                     </div>
                 </div>
