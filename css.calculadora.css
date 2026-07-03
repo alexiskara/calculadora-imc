@@ -1,0 +1,262 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px 0;
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    color: #fff;
+    box-sizing: border-box;
+}
+
+.container {
+    background: #ffffff;
+    color: #333;
+    padding: 40px 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    width: 400px;
+}
+
+h1 {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* ===== Abas ===== */
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    background: #f0f2f7;
+    padding: 6px;
+    border-radius: 10px;
+}
+
+.tab-btn {
+    flex: 1;
+    background: transparent;
+    color: #666;
+    border: none;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.tab-btn:hover {
+    background: #e2e6f0;
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    color: #fff;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* ===== Formulário ===== */
+.input-group {
+    margin: 20px 0;
+    text-align: left;
+}
+
+label {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: #666;
+}
+
+input,
+select {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box;
+    background: #fff;
+    color: #333;
+}
+
+button {
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    color: #fff;
+    border: none;
+    padding: 15px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+    width: 100%;
+}
+
+button:hover {
+    background: linear-gradient(135deg, #5e0ecb, #1b5fd6);
+}
+
+/* ===== Resultados ===== */
+.result {
+    margin-top: 20px;
+    font-size: 16px;
+    color: #333;
+    text-align: left;
+}
+
+.result hr {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 15px 0;
+}
+
+.imc-valor {
+    font-size: 22px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.classificacao {
+    text-align: center;
+    font-weight: bold;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.classificacao.ok,
+.result .ok {
+    background: #e6f7e9;
+    color: #1e7e34;
+}
+
+.classificacao.atencao,
+.result .atencao {
+    background: #fff6e0;
+    color: #b8860b;
+}
+
+.classificacao.alerta,
+.result .alerta {
+    background: #fdeaea;
+    color: #c0392b;
+}
+
+.peso-ideal,
+.mensagem,
+.info-linha {
+    margin: 8px 0;
+}
+
+.calorias-alvo {
+    text-align: center;
+    font-size: 18px;
+    padding: 12px;
+    border-radius: 8px;
+    margin: 12px 0;
+}
+
+.calorias-alvo.perder {
+    background: #fdeaea;
+    color: #c0392b;
+}
+
+.calorias-alvo.ganhar {
+    background: #fff6e0;
+    color: #b8860b;
+}
+
+.calorias-alvo.manter {
+    background: #e6f7e9;
+    color: #1e7e34;
+}
+
+.macros-titulo {
+    font-weight: bold;
+    margin: 15px 0 8px;
+    text-align: center;
+}
+
+.macros {
+    display: flex;
+    gap: 8px;
+}
+
+.macro {
+    flex: 1;
+    text-align: center;
+    padding: 10px 6px;
+    border-radius: 8px;
+}
+
+.macro-nome {
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.macro-valor {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 4px 0;
+}
+
+.macro-pct {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.macro.proteina {
+    background: #e8f0fe;
+    color: #1a56b0;
+}
+
+.macro.carboidrato {
+    background: #fff6e0;
+    color: #b8860b;
+}
+
+.macro.gordura {
+    background: #fdeaea;
+    color: #c0392b;
+}
+
+.aviso {
+    margin-top: 15px;
+    font-size: 12px;
+    color: #999;
+}
+
+/* ===== Rodapé ===== */
+.logo {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #2575fc;
+}
+
+.footer {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #777;
+}
+
+.footer a {
+    color: #2575fc;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    text-decoration: underline;
+}
