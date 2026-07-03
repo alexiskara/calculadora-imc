@@ -180,6 +180,44 @@ const CHAVE_META = 'imcProMeta';
 const CHAVE_DIARIO = 'imcProDiario';
 const CHAVE_LEMBRETE = 'imcProLembrete';
 const CHAVE_ULTIMA_NOTIFICACAO = 'imcProUltimaNotif';
+const CHAVE_TEMA = 'imcProTema';
+
+// ===== Tema claro/escuro =====
+function aplicarTema(tema) {
+    document.documentElement.setAttribute('data-tema', tema);
+    const botao = document.getElementById('btnTema');
+    if (botao) {
+        botao.textContent = tema === 'escuro' ? '☀️' : '🌙';
+        botao.title = tema === 'escuro' ? 'Mudar para tema claro' : 'Mudar para tema escuro';
+    }
+    // Cor da barra do navegador/PWA acompanha o tema
+    if (document.querySelector) {
+        const metaCor = document.querySelector('meta[name="theme-color"]');
+        if (metaCor) metaCor.setAttribute('content', tema === 'escuro' ? '#1f1f2e' : '#6a11cb');
+    }
+}
+
+function alternarTema() {
+    const novo = document.documentElement.getAttribute('data-tema') === 'escuro' ? 'claro' : 'escuro';
+    gravarStorage(CHAVE_TEMA, novo);
+    aplicarTema(novo);
+}
+
+function iniciarTema() {
+    const salvo = lerStorage(CHAVE_TEMA);
+    const temMatchMedia = typeof window.matchMedia === 'function';
+    const sistemaEscuro = temMatchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    aplicarTema(salvo === 'escuro' || salvo === 'claro' ? salvo : (sistemaEscuro ? 'escuro' : 'claro'));
+    // Sem escolha manual, acompanha o tema do sistema em tempo real
+    if (!salvo && temMatchMedia) {
+        const consulta = window.matchMedia('(prefers-color-scheme: dark)');
+        if (consulta.addEventListener) {
+            consulta.addEventListener('change', function (evento) {
+                if (!lerStorage(CHAVE_TEMA)) aplicarTema(evento.matches ? 'escuro' : 'claro');
+            });
+        }
+    }
+}
 
 // Grupos de campos que devem ficar sincronizados entre as abas
 const camposSincronizados = [
@@ -987,11 +1025,33 @@ function salvarHistorico(historico) {
     gravarStorage(CHAVE_HISTORICO, JSON.stringify(historico));
 }
 
+function formatarISO(data) {
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const dia = String(data.getDate()).padStart(2, '0');
+    return `${data.getFullYear()}-${mes}-${dia}`;
+}
+
 function dataHojeISO() {
-    const hoje = new Date();
-    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-    const dia = String(hoje.getDate()).padStart(2, '0');
-    return `${hoje.getFullYear()}-${mes}-${dia}`;
+    return formatarISO(new Date());
+}
+
+// Sequência de dias consecutivos com peso registrado (terminando hoje ou,
+// se hoje ainda não foi registrado, terminando ontem)
+function calcularSequencia(historico) {
+    const dias = {};
+    historico.forEach(function (registro) {
+        dias[registro.data] = true;
+    });
+    const registrouHoje = !!dias[dataHojeISO()];
+    const cursor = new Date();
+    if (!registrouHoje) cursor.setDate(cursor.getDate() - 1);
+
+    let contagem = 0;
+    while (dias[formatarISO(cursor)]) {
+        contagem++;
+        cursor.setDate(cursor.getDate() - 1);
+    }
+    return { dias: contagem, registrouHoje: registrouHoje };
 }
 
 function formatarDataBR(iso) {
@@ -1222,6 +1282,21 @@ function renderizarHistorico() {
     const graficoDiv = document.getElementById('grafico');
     const listaDiv = document.getElementById('listaHistorico');
 
+    // Sequência de dias registrando
+    const streakDiv = document.getElementById('streakBanner');
+    const sequencia = calcularSequencia(historico);
+    if (sequencia.dias >= 1) {
+        const rotulo = sequencia.dias === 1
+            ? '<strong>1 dia</strong> registrando o peso'
+            : `<strong>${sequencia.dias} dias seguidos</strong> registrando o peso`;
+        const incentivo = sequencia.registrouHoje
+            ? (sequencia.dias >= 3 ? ' Continue assim!' : '')
+            : ' Registre hoje para manter a sequência!';
+        streakDiv.innerHTML = `<div class="streak">🔥 ${rotulo}.${incentivo}</div>`;
+    } else {
+        streakDiv.innerHTML = '';
+    }
+
     if (historico.length === 0) {
         graficoDiv.innerHTML = '';
         listaDiv.innerHTML = '<div class="mensagem grafico-vazio">Nenhuma pesagem registrada ainda. Registre seu peso de hoje para começar a acompanhar.</div>';
@@ -1257,6 +1332,7 @@ function renderizarHistorico() {
 }
 
 // ===== Inicialização (script carrega com defer, DOM já pronto) =====
+iniciarTema();
 restaurarDados();
 iniciarSincronizacao();
 preencherAtividades();

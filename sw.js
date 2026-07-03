@@ -1,6 +1,6 @@
 // Service worker: deixa o app funcionar offline (cache-first para o app,
 // rede-first para a busca de alimentos)
-const CACHE = 'imc-pro-v4';
+const CACHE = 'imc-pro-v5';
 
 const ARQUIVOS_BASE = [
     '.',

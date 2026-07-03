@@ -1,3 +1,80 @@
+/* ===== Temas (claro é o padrão; escuro via data-tema="escuro") ===== */
+:root {
+    --grad-fundo: linear-gradient(135deg, #6a11cb, #2575fc);
+    --grad-marca: linear-gradient(135deg, #6a11cb, #2575fc);
+    --grad-marca-hover: linear-gradient(135deg, #5e0ecb, #1b5fd6);
+    --fundo-card: #ffffff;
+    --fundo-input: #ffffff;
+    --texto: #333;
+    --texto-suave: #666;
+    --texto-fraco: #999;
+    --superficie: #f0f2f7;
+    --superficie-hover: #e2e6f0;
+    --borda-input: #ddd;
+    --divisor: #f0f0f0;
+    --divisor-forte: #eee;
+    --azul: #2575fc;
+    --serie: #2575fc;
+    --ok-fundo: #e6f7e9;
+    --ok-texto: #1e7e34;
+    --atencao-fundo: #fff6e0;
+    --atencao-texto: #b8860b;
+    --alerta-fundo: #fdeaea;
+    --alerta-texto: #c0392b;
+    --prot-fundo: #e8f0fe;
+    --prot-texto: #1a56b0;
+    --agua-fundo: #eaf4fd;
+    --agua-borda: #cfe6fa;
+    --agua-texto: #075985;
+    --agua-fill: #0284c7;
+    --chip-fundo: #f7f8fc;
+    --chip-borda: #e6e9f2;
+    --chip-hover: #eef1f9;
+    --chip-hover-borda: #c9d4f0;
+    --chip-ativo: #e0e7fa;
+    --streak-fundo: #fff0e0;
+    --streak-texto: #c2410c;
+    --sombra-card: rgba(0, 0, 0, 0.3);
+}
+
+:root[data-tema="escuro"] {
+    --grad-fundo: linear-gradient(135deg, #1c0733, #041233);
+    --grad-marca: linear-gradient(135deg, #7b2ff7, #2575fc);
+    --grad-marca-hover: linear-gradient(135deg, #8b45ff, #3b82fc);
+    --fundo-card: #1f1f2e;
+    --fundo-input: #27273a;
+    --texto: #e9e9f2;
+    --texto-suave: #b9b9c9;
+    --texto-fraco: #8a8a9e;
+    --superficie: #2b2b3e;
+    --superficie-hover: #363650;
+    --borda-input: #3d3d54;
+    --divisor: #2d2d40;
+    --divisor-forte: #33334a;
+    --azul: #6ba1ff;
+    --serie: #4f8df9;
+    --ok-fundo: #123522;
+    --ok-texto: #74d996;
+    --atencao-fundo: #38300f;
+    --atencao-texto: #e5c35b;
+    --alerta-fundo: #3c1717;
+    --alerta-texto: #f08e84;
+    --prot-fundo: #14284a;
+    --prot-texto: #8bb5f8;
+    --agua-fundo: #10283d;
+    --agua-borda: #1b4361;
+    --agua-texto: #82c8f7;
+    --agua-fill: #38a3e8;
+    --chip-fundo: #272736;
+    --chip-borda: #35354c;
+    --chip-hover: #2e2e44;
+    --chip-hover-borda: #4a4a70;
+    --chip-ativo: #3a3a58;
+    --streak-fundo: #3a2410;
+    --streak-texto: #f0a35f;
+    --sombra-card: rgba(0, 0, 0, 0.6);
+}
+
 body {
     font-family: 'Poppins', sans-serif;
     display: flex;
@@ -6,21 +83,23 @@ body {
     min-height: 100vh;
     margin: 0;
     padding: 20px 10px;
-    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    background: var(--grad-fundo);
     color: #fff;
     box-sizing: border-box;
 }
 
 .container {
-    background: #ffffff;
-    color: #333;
+    position: relative;
+    background: var(--fundo-card);
+    color: var(--texto);
     padding: 40px 30px;
     border-radius: 15px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 20px var(--sombra-card);
     text-align: center;
     width: 100%;
     max-width: 400px;
     box-sizing: border-box;
+    transition: background 0.3s, color 0.3s;
 }
 
 @media (max-width: 420px) {
@@ -30,40 +109,67 @@ body {
 }
 
 h1 {
-    color: #333;
+    color: var(--texto);
     font-size: 24px;
     margin-bottom: 20px;
+}
+
+/* ===== Botão de tema ===== */
+.btn-tema {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    font-size: 17px;
+    line-height: 1;
+    border-radius: 50%;
+    background: var(--superficie);
+}
+
+.btn-tema:hover {
+    background: var(--superficie-hover);
 }
 
 /* ===== Abas ===== */
 .tabs {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     margin-bottom: 20px;
-    background: #f0f2f7;
+    background: var(--superficie);
     padding: 6px;
     border-radius: 10px;
 }
 
 .tab-btn {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
     background: transparent;
-    color: #666;
+    color: var(--texto-suave);
     border: none;
-    padding: 10px 2px;
-    font-size: 13px;
+    padding: 8px 2px;
+    font-size: 12px;
     font-weight: bold;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s;
 }
 
+.tab-icone {
+    font-size: 17px;
+    line-height: 1;
+}
+
 .tab-btn:hover {
-    background: #e2e6f0;
+    background: var(--superficie-hover);
 }
 
 .tab-btn.active {
-    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    background: var(--grad-marca);
     color: #fff;
 }
 
@@ -85,7 +191,7 @@ label {
     display: block;
     font-size: 16px;
     margin-bottom: 8px;
-    color: #666;
+    color: var(--texto-suave);
 }
 
 input,
@@ -93,15 +199,19 @@ select {
     width: 100%;
     padding: 12px;
     font-size: 16px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--borda-input);
     border-radius: 8px;
     box-sizing: border-box;
-    background: #fff;
-    color: #333;
+    background: var(--fundo-input);
+    color: var(--texto);
+}
+
+input::placeholder {
+    color: var(--texto-fraco);
 }
 
 button {
-    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    background: var(--grad-marca);
     color: #fff;
     border: none;
     padding: 15px;
@@ -114,20 +224,20 @@ button {
 }
 
 button:hover {
-    background: linear-gradient(135deg, #5e0ecb, #1b5fd6);
+    background: var(--grad-marca-hover);
 }
 
 /* ===== Resultados ===== */
 .result {
     margin-top: 20px;
     font-size: 16px;
-    color: #333;
+    color: var(--texto);
     text-align: left;
 }
 
 .result hr {
     border: none;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--divisor-forte);
     margin: 15px 0;
 }
 
@@ -147,20 +257,20 @@ button:hover {
 
 .classificacao.ok,
 .result .ok {
-    background: #e6f7e9;
-    color: #1e7e34;
+    background: var(--ok-fundo);
+    color: var(--ok-texto);
 }
 
 .classificacao.atencao,
 .result .atencao {
-    background: #fff6e0;
-    color: #b8860b;
+    background: var(--atencao-fundo);
+    color: var(--atencao-texto);
 }
 
 .classificacao.alerta,
 .result .alerta {
-    background: #fdeaea;
-    color: #c0392b;
+    background: var(--alerta-fundo);
+    color: var(--alerta-texto);
 }
 
 .peso-ideal,
@@ -191,8 +301,8 @@ button:hover {
     top: 50%;
     width: 18px;
     height: 18px;
-    background: #fff;
-    border: 3px solid #333;
+    background: var(--fundo-card);
+    border: 3px solid var(--texto);
     border-radius: 50%;
     transform: translate(-50%, -50%);
     box-sizing: border-box;
@@ -209,7 +319,7 @@ button:hover {
     position: absolute;
     transform: translateX(-50%);
     font-size: 11px;
-    color: #999;
+    color: var(--texto-fraco);
 }
 
 .imc-barra-nomes {
@@ -221,22 +331,22 @@ button:hover {
 
 .imc-barra-nomes .nome-abaixo {
     width: 14%;
-    color: #2575fc;
+    color: var(--azul);
 }
 
 .imc-barra-nomes .nome-ideal {
     width: 26%;
-    color: #1e7e34;
+    color: var(--ok-texto);
 }
 
 .imc-barra-nomes .nome-sobre {
     width: 20%;
-    color: #b8860b;
+    color: var(--atencao-texto);
 }
 
 .imc-barra-nomes .nome-obesidade {
     width: 40%;
-    color: #c0392b;
+    color: var(--alerta-texto);
 }
 
 /* ===== Calorias: meta ===== */
@@ -249,18 +359,18 @@ button:hover {
 }
 
 .calorias-alvo.perder {
-    background: #fdeaea;
-    color: #c0392b;
+    background: var(--alerta-fundo);
+    color: var(--alerta-texto);
 }
 
 .calorias-alvo.ganhar {
-    background: #fff6e0;
-    color: #b8860b;
+    background: var(--atencao-fundo);
+    color: var(--atencao-texto);
 }
 
 .calorias-alvo.manter {
-    background: #e6f7e9;
-    color: #1e7e34;
+    background: var(--ok-fundo);
+    color: var(--ok-texto);
 }
 
 /* ===== Macronutrientes ===== */
@@ -299,18 +409,29 @@ button:hover {
 }
 
 .macro.proteina {
-    background: #e8f0fe;
-    color: #1a56b0;
+    background: var(--prot-fundo);
+    color: var(--prot-texto);
 }
 
 .macro.carboidrato {
-    background: #fff6e0;
-    color: #b8860b;
+    background: var(--atencao-fundo);
+    color: var(--atencao-texto);
 }
 
 .macro.gordura {
-    background: #fdeaea;
-    color: #c0392b;
+    background: var(--alerta-fundo);
+    color: var(--alerta-texto);
+}
+
+/* ===== Histórico: sequência de dias ===== */
+.streak {
+    background: var(--streak-fundo);
+    color: var(--streak-texto);
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 12px;
+    text-align: center;
 }
 
 /* ===== Histórico: gráfico ===== */
@@ -327,40 +448,40 @@ button:hover {
 }
 
 .grafico-grade {
-    stroke: #eee;
+    stroke: var(--divisor-forte);
     stroke-width: 1;
 }
 
 .grafico-eixo {
     font-size: 10px;
-    fill: #999;
+    fill: var(--texto-fraco);
     font-family: inherit;
 }
 
 .grafico-linha {
     fill: none;
-    stroke: #2575fc;
+    stroke: var(--serie);
     stroke-width: 2;
     stroke-linejoin: round;
     stroke-linecap: round;
 }
 
 .grafico-ponto {
-    fill: #2575fc;
-    stroke: #fff;
+    fill: var(--serie);
+    stroke: var(--fundo-card);
     stroke-width: 2;
 }
 
 .grafico-rotulo {
     font-size: 11px;
     font-weight: bold;
-    fill: #333;
+    fill: var(--texto);
     font-family: inherit;
 }
 
 .grafico-vazio {
     text-align: center;
-    color: #999;
+    color: var(--texto-fraco);
 }
 
 /* ===== Histórico: lista ===== */
@@ -369,12 +490,12 @@ button:hover {
     align-items: center;
     gap: 8px;
     padding: 8px 4px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--divisor);
     font-size: 14px;
 }
 
 .hist-data {
-    color: #666;
+    color: var(--texto-suave);
     flex: 1;
 }
 
@@ -389,23 +510,23 @@ button:hover {
 }
 
 .hist-delta.subiu {
-    color: #c0392b;
+    color: var(--alerta-texto);
 }
 
 .hist-delta.desceu {
-    color: #1e7e34;
+    color: var(--ok-texto);
 }
 
 .hist-delta.neutro {
-    color: #999;
+    color: var(--texto-fraco);
 }
 
 .hist-remover {
     width: 26px;
     height: 26px;
     padding: 0;
-    background: #f0f2f7;
-    color: #999;
+    background: var(--superficie);
+    color: var(--texto-fraco);
     font-size: 16px;
     line-height: 1;
     border-radius: 50%;
@@ -413,65 +534,21 @@ button:hover {
 }
 
 .hist-remover:hover {
-    background: #fdeaea;
-    color: #c0392b;
-}
-
-/* ===== Avisos e rodapé ===== */
-.aviso {
-    margin-top: 15px;
-    font-size: 12px;
-    color: #999;
-}
-
-.logo {
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 20px;
-    color: #2575fc;
-}
-
-.footer {
-    margin-top: 20px;
-    font-size: 14px;
-    color: #777;
-}
-
-.footer a {
-    color: #2575fc;
-    text-decoration: none;
-}
-
-.footer a:hover {
-    text-decoration: underline;
-}
-
-.btn-limpar {
-    display: block;
-    width: auto;
-    margin: 12px auto 0;
-    padding: 6px 14px;
-    font-size: 12px;
-    background: #f0f2f7;
-    color: #777;
-}
-
-.btn-limpar:hover {
-    background: #fdeaea;
-    color: #c0392b;
+    background: var(--alerta-fundo);
+    color: var(--alerta-texto);
 }
 
 /* ===== Botões secundários (CSV, limpar dia) ===== */
 .btn-secundario {
-    background: #f0f2f7;
-    color: #555;
+    background: var(--superficie);
+    color: var(--texto-suave);
     font-size: 14px;
     padding: 10px;
 }
 
 .btn-secundario:hover {
-    background: #e2e6f0;
-    color: #333;
+    background: var(--superficie-hover);
+    color: var(--texto);
 }
 
 .hist-acoes {
@@ -496,14 +573,14 @@ button:hover {
     gap: 8px;
     margin-top: 14px;
     font-size: 14px;
-    color: #666;
+    color: var(--texto-suave);
     cursor: pointer;
     text-align: left;
 }
 
 .lembrete-linha input {
     width: auto;
-    accent-color: #2575fc;
+    accent-color: var(--azul);
 }
 
 #lembreteBanner .classificacao {
@@ -513,7 +590,7 @@ button:hover {
 /* ===== Diário alimentar ===== */
 .subtitulo {
     font-size: 18px;
-    color: #333;
+    color: var(--texto);
     margin: 25px 0 5px;
 }
 
@@ -534,12 +611,12 @@ button:hover {
 
 .busca-status {
     text-align: center;
-    color: #999;
+    color: var(--texto-fraco);
 }
 
 .busca-fonte {
     font-size: 11px;
-    color: #999;
+    color: var(--texto-fraco);
     margin-bottom: 6px;
 }
 
@@ -549,7 +626,7 @@ button:hover {
     align-items: center;
     gap: 8px;
     padding: 8px 2px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--divisor);
 }
 
 .alimento-info {
@@ -567,7 +644,7 @@ button:hover {
 
 .alimento-macros {
     font-size: 12px;
-    color: #888;
+    color: var(--texto-fraco);
 }
 
 .btn-add {
@@ -594,20 +671,20 @@ button:hover {
     font-size: 18px;
     line-height: 1;
     border-radius: 50%;
-    background: #f0f2f7;
-    color: #444;
+    background: var(--superficie);
+    color: var(--texto-suave);
     flex: none;
 }
 
 .qtd-btn:hover {
-    background: #e2e6f0;
-    color: #111;
+    background: var(--superficie-hover);
+    color: var(--texto);
 }
 
 /* ===== Atalhos de alimentos comuns ===== */
 .dica {
     font-size: 13px;
-    color: #888;
+    color: var(--texto-fraco);
     margin: 4px 0 10px;
     text-align: left;
 }
@@ -626,9 +703,9 @@ button:hover {
     flex-direction: column;
     align-items: center;
     gap: 2px;
-    background: #f7f8fc;
-    border: 1px solid #e6e9f2;
-    color: #444;
+    background: var(--chip-fundo);
+    border: 1px solid var(--chip-borda);
+    color: var(--texto-suave);
     font-size: 12px;
     font-weight: 600;
     padding: 10px 4px 8px;
@@ -636,12 +713,12 @@ button:hover {
 }
 
 .chip:hover {
-    background: #eef1f9;
-    border-color: #c9d4f0;
+    background: var(--chip-hover);
+    border-color: var(--chip-hover-borda);
 }
 
 .chip:active {
-    background: #e0e7fa;
+    background: var(--chip-ativo);
 }
 
 .chip-emoji {
@@ -656,12 +733,59 @@ button:hover {
 .chip-kcal {
     font-size: 10px;
     font-weight: normal;
-    color: #999;
+    color: var(--texto-fraco);
+}
+
+.diario-total {
+    padding: 10px 2px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.diario-total.queimadas {
+    color: var(--ok-texto);
+}
+
+.btn-limpar-dia {
+    margin-top: 8px;
+    font-size: 12px;
+    padding: 8px;
+}
+
+/* ===== Progresso do dia (meta calórica) ===== */
+.progresso-texto {
+    text-align: center;
+    font-size: 16px;
+}
+
+.progresso-track {
+    height: 12px;
+    border-radius: 6px;
+    background: var(--superficie);
+    margin: 8px 0 6px;
+    overflow: hidden;
+}
+
+.progresso-fill {
+    height: 100%;
+    border-radius: 6px;
+    background: var(--serie);
+    transition: width 0.4s;
+}
+
+.progresso-fill.estourou {
+    background: #e74c3c;
+}
+
+.progresso-sub {
+    text-align: center;
+    font-size: 13px;
+    color: var(--texto-fraco);
 }
 
 /* ===== Água ===== */
 .progresso-fill.agua {
-    background: #0284c7;
+    background: var(--agua-fill);
 }
 
 .agua-botoes {
@@ -678,18 +802,15 @@ button:hover {
     gap: 2px;
     padding: 10px 4px 8px;
     border-radius: 12px;
-    background: #eaf4fd;
-    border: 1px solid #cfe6fa;
-    color: #075985;
+    background: var(--agua-fundo);
+    border: 1px solid var(--agua-borda);
+    color: var(--agua-texto);
 }
 
-.agua-opcao:hover {
-    background: #dbedfc;
-    border-color: #9dcdf5;
-}
-
+.agua-opcao:hover,
 .agua-opcao:active {
-    background: #c8e3fa;
+    background: var(--agua-fundo);
+    border-color: var(--agua-texto);
 }
 
 .agua-opcao-icone {
@@ -733,54 +854,56 @@ button:hover {
     text-align: center;
 }
 
+:root[data-tema="escuro"] #toast {
+    background: rgba(58, 58, 80, 0.95);
+    border: 1px solid #4a4a68;
+}
+
 #toast.visivel {
     opacity: 1;
     transform: translate(-50%, 0);
 }
 
-.diario-total {
-    padding: 10px 2px;
-    font-size: 14px;
-    text-align: center;
-}
-
-.diario-total.queimadas {
-    color: #1e7e34;
-}
-
-.btn-limpar-dia {
-    margin-top: 8px;
+/* ===== Avisos e rodapé ===== */
+.aviso {
+    margin-top: 15px;
     font-size: 12px;
-    padding: 8px;
+    color: var(--texto-fraco);
 }
 
-/* ===== Progresso do dia (meta calórica) ===== */
-.progresso-texto {
-    text-align: center;
-    font-size: 16px;
+.logo {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: var(--azul);
 }
 
-.progresso-track {
-    height: 12px;
-    border-radius: 6px;
-    background: #f0f2f7;
-    margin: 8px 0 6px;
-    overflow: hidden;
+.footer {
+    margin-top: 20px;
+    font-size: 14px;
+    color: var(--texto-fraco);
 }
 
-.progresso-fill {
-    height: 100%;
-    border-radius: 6px;
-    background: #2575fc;
-    transition: width 0.4s;
+.footer a {
+    color: var(--azul);
+    text-decoration: none;
 }
 
-.progresso-fill.estourou {
-    background: #e74c3c;
+.footer a:hover {
+    text-decoration: underline;
 }
 
-.progresso-sub {
-    text-align: center;
-    font-size: 13px;
-    color: #888;
+.btn-limpar {
+    display: block;
+    width: auto;
+    margin: 12px auto 0;
+    padding: 6px 14px;
+    font-size: 12px;
+    background: var(--superficie);
+    color: var(--texto-fraco);
+}
+
+.btn-limpar:hover {
+    background: var(--alerta-fundo);
+    color: var(--alerta-texto);
 }

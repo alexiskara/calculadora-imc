@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de IMC</title>
     <meta name="theme-color" content="#6a11cb">
+    <script>
+        // Aplica o tema salvo antes da página pintar, evitando o "flash" claro
+        try {
+            var temaSalvo = localStorage.getItem('imcProTema');
+            if (temaSalvo === 'escuro' || temaSalvo === 'claro') {
+                document.documentElement.setAttribute('data-tema', temaSalvo);
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-tema', 'escuro');
+            }
+        } catch (e) { }
+    </script>
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" type="image/png" href="icons/icon-192.png">
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -16,13 +27,14 @@
 </head>
 <body>
     <div class="container">
+        <button type="button" class="btn-tema" id="btnTema" onclick="alternarTema()" title="Mudar tema">🌙</button>
         <div class="logo">IMC Pro</div>
 
         <div class="tabs" role="tablist">
-            <button class="tab-btn active" data-tab="aba-imc" role="tab" aria-selected="true" onclick="trocarAba('aba-imc', this)">IMC</button>
-            <button class="tab-btn" data-tab="aba-calorias" role="tab" aria-selected="false" onclick="trocarAba('aba-calorias', this)">Calorias</button>
-            <button class="tab-btn" data-tab="aba-alimentos" role="tab" aria-selected="false" onclick="trocarAba('aba-alimentos', this)">Diário</button>
-            <button class="tab-btn" data-tab="aba-historico" role="tab" aria-selected="false" onclick="trocarAba('aba-historico', this)">Histórico</button>
+            <button class="tab-btn active" data-tab="aba-imc" role="tab" aria-selected="true" onclick="trocarAba('aba-imc', this)"><span class="tab-icone">📏</span>IMC</button>
+            <button class="tab-btn" data-tab="aba-calorias" role="tab" aria-selected="false" onclick="trocarAba('aba-calorias', this)"><span class="tab-icone">🔥</span>Calorias</button>
+            <button class="tab-btn" data-tab="aba-alimentos" role="tab" aria-selected="false" onclick="trocarAba('aba-alimentos', this)"><span class="tab-icone">📋</span>Diário</button>
+            <button class="tab-btn" data-tab="aba-historico" role="tab" aria-selected="false" onclick="trocarAba('aba-historico', this)"><span class="tab-icone">📈</span>Histórico</button>
         </div>
 
         <!-- ABA 1: IMC -->
@@ -133,6 +145,7 @@
         <!-- ABA 4: HISTÓRICO -->
         <div class="tab-content" id="aba-historico">
             <h1>Histórico de Peso</h1>
+            <div id="streakBanner"></div>
             <div id="lembreteBanner"></div>
             <form onsubmit="event.preventDefault(); registrarPeso();">
                 <div class="input-group">
