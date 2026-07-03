@@ -1,3 +1,20 @@
+/*
+ * TODO — Integrações futuras (combinadas, aguardando contas/chaves do Alexis):
+ *
+ * 6) SINCRONIZAÇÃO NA NUVEM (Firebase)
+ *    Login com Google e sincronização do histórico de peso, diário alimentar
+ *    e configurações entre dispositivos (hoje tudo vive no localStorage de
+ *    cada navegador). Requer: criar projeto no console do Firebase
+ *    (https://console.firebase.google.com) com Authentication (Google) e
+ *    Firestore, e colar aqui a config do SDK web.
+ *
+ * 7) SUGESTÕES COM IA (API do Claude)
+ *    Gerar plano alimentar do dia a partir da meta calórica e dos macros
+ *    calculados. Requer: chave da API da Anthropic e um pequeno backend
+ *    (ex.: Cloudflare Worker ou função no Vercel) para guardar a chave —
+ *    ela não pode ficar exposta no código deste site público.
+ */
+
 // ===== PWA: registra o service worker (modo offline / app instalável) =====
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
