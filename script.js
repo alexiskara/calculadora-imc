@@ -534,10 +534,14 @@ const ALIMENTOS_RAPIDOS = [
     { emoji: '🍫', nome: 'Chocolate', medida: '2 quadradinhos', kcal: 135, prot: 1.9, carb: 15.0, gord: 7.9 }
 ];
 
-// Água: recomendação de ~35 ml por kg de peso, contada em copos de 250 ml
-const COPO_ML = 250;
+// Água: recomendação de ~35 ml por kg de peso
 const AGUA_ML_POR_KG = 35;
 const META_AGUA_PADRAO = 2000;
+const RECIPIENTES_AGUA = [
+    { ml: 200, nome: 'Copo pequeno' },
+    { ml: 250, nome: 'Copo' },
+    { ml: 500, nome: 'Garrafa' }
+];
 
 let resultadosBuscaAtual = [];
 
@@ -554,6 +558,7 @@ function carregarDiario() {
         if (diario && diario.data === dataHojeISO() && Array.isArray(diario.itens)) {
             if (!Array.isArray(diario.exercicios)) diario.exercicios = [];
             if (typeof diario.agua !== 'number' || diario.agua < 0) diario.agua = 0;
+            if (!Array.isArray(diario.aguaRegistros)) diario.aguaRegistros = [];
             // Migra itens do formato antigo (gramas sobre valores por 100 g)
             diario.itens = diario.itens.map(function (item) {
                 if (item.gramas !== undefined) {
@@ -574,7 +579,19 @@ function carregarDiario() {
     } catch (e) {
         // diário corrompido ou de outro dia: começa um novo
     }
-    return { data: dataHojeISO(), itens: [], exercicios: [], agua: 0 };
+    return { data: dataHojeISO(), itens: [], exercicios: [], agua: 0, aguaRegistros: [] };
+}
+
+// Aviso rápido de confirmação na parte de baixo da tela
+let timerToast = null;
+function mostrarToast(texto) {
+    const toast = document.getElementById('toast');
+    toast.textContent = texto;
+    toast.classList.add('visivel');
+    if (timerToast) clearTimeout(timerToast);
+    timerToast = setTimeout(function () {
+        toast.classList.remove('visivel');
+    }, 1800);
 }
 
 function salvarDiario(diario) {
@@ -643,8 +660,10 @@ function inserirItemDiario(novo) {
     });
     if (existente) {
         existente.quantidade = Math.round((existente.quantidade + novo.quantidade) * 10) / 10;
+        mostrarToast('🍽️ ' + novo.nome + ' — agora ' + String(existente.quantidade).replace('.', ',') + '×');
     } else {
         diario.itens.push(novo);
+        mostrarToast('🍽️ ' + novo.nome + ' adicionado');
     }
     salvarDiario(diario);
     renderizarDiario();
@@ -708,9 +727,24 @@ function limparDiario() {
 }
 
 // ===== Água do dia =====
-function ajustarAgua(copos) {
+function registrarAgua(ml) {
     const diario = carregarDiario();
-    diario.agua = Math.max(0, diario.agua + copos * COPO_ML);
+    diario.aguaRegistros.push(ml);
+    diario.agua += ml;
+    salvarDiario(diario);
+    renderizarDiario();
+    mostrarToast('💧 +' + ml + ' ml de água');
+}
+
+function desfazerAgua() {
+    const diario = carregarDiario();
+    if (diario.aguaRegistros.length === 0) {
+        // Registros antigos (sem pilha de desfazer): remove 250 ml por vez
+        diario.agua = Math.max(0, diario.agua - 250);
+    } else {
+        const ultimo = diario.aguaRegistros.pop();
+        diario.agua = Math.max(0, diario.agua - ultimo);
+    }
     salvarDiario(diario);
     renderizarDiario();
 }
@@ -724,7 +758,6 @@ function renderizarAgua(diario) {
     const peso = pesoAtualUsuario();
     // Meta arredondada para múltiplos de 50 ml
     const metaAgua = peso ? Math.round((peso * AGUA_ML_POR_KG) / 50) * 50 : META_AGUA_PADRAO;
-    const copos = Math.round(diario.agua / COPO_ML);
     const percentual = Math.round((diario.agua / metaAgua) * 100);
     const atingiu = diario.agua >= metaAgua;
 
@@ -732,16 +765,24 @@ function renderizarAgua(diario) {
         ? `Sua meta: ${formatarLitros(metaAgua)} por dia (35 ml por kg)`
         : `Meta padrão: ${formatarLitros(metaAgua)} — informe seu peso na aba IMC para personalizar`;
 
+    let botoes = '';
+    RECIPIENTES_AGUA.forEach(function (recipiente) {
+        botoes += `
+            <button type="button" class="agua-opcao" onclick="registrarAgua(${recipiente.ml})">
+                <span class="agua-opcao-icone">💧</span>
+                <span class="agua-opcao-ml">+${recipiente.ml} ml</span>
+                <span class="agua-opcao-nome">${recipiente.nome}</span>
+            </button>`;
+    });
+
     div.innerHTML = `
-        <div class="progresso-texto"><strong>${formatarLitros(diario.agua)}</strong> de <strong>${formatarLitros(metaAgua)}</strong> (${copos} copo${copos === 1 ? '' : 's'})</div>
+        <div class="progresso-texto"><strong>${formatarLitros(diario.agua)}</strong> de <strong>${formatarLitros(metaAgua)}</strong> (${Math.min(percentual, 999)}%)</div>
         <div class="progresso-track">
             <div class="progresso-fill agua" style="width: ${Math.min(percentual, 100)}%"></div>
         </div>
         <div class="progresso-sub">${atingiu ? 'Meta de água atingida! 💧 Continue se hidratando.' : notaMeta}</div>
-        <div class="agua-botoes">
-            <button type="button" class="btn-secundario agua-menos" onclick="ajustarAgua(-1)" ${diario.agua === 0 ? 'disabled' : ''}>−</button>
-            <button type="button" class="agua-mais" onclick="ajustarAgua(1)">💧 Bebi 1 copo (250 ml)</button>
-        </div>
+        <div class="agua-botoes">${botoes}</div>
+        ${diario.agua > 0 ? '<button type="button" class="btn-secundario agua-desfazer" onclick="desfazerAgua()">↩ Desfazer último registro</button>' : ''}
     `;
 }
 

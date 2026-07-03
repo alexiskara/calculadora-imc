@@ -670,26 +670,72 @@ button:hover {
     margin-top: 10px;
 }
 
-.agua-menos {
-    flex: 0 0 56px;
-    font-size: 20px;
-    padding: 10px 0;
-}
-
-.agua-menos:disabled {
-    opacity: 0.4;
-    cursor: default;
-}
-
-.agua-mais {
+.agua-opcao {
     flex: 1;
-    padding: 12px;
-    font-size: 15px;
-    background: linear-gradient(135deg, #0284c7, #2575fc);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 10px 4px 8px;
+    border-radius: 12px;
+    background: #eaf4fd;
+    border: 1px solid #cfe6fa;
+    color: #075985;
 }
 
-.agua-mais:hover {
-    background: linear-gradient(135deg, #0270a8, #1b5fd6);
+.agua-opcao:hover {
+    background: #dbedfc;
+    border-color: #9dcdf5;
+}
+
+.agua-opcao:active {
+    background: #c8e3fa;
+}
+
+.agua-opcao-icone {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.agua-opcao-ml {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.agua-opcao-nome {
+    font-size: 10px;
+    opacity: 0.8;
+}
+
+.agua-desfazer {
+    margin-top: 8px;
+    font-size: 12px;
+    padding: 8px;
+}
+
+/* ===== Toast de confirmação ===== */
+#toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translate(-50%, 20px);
+    background: rgba(30, 30, 40, 0.92);
+    color: #fff;
+    font-size: 14px;
+    padding: 10px 18px;
+    border-radius: 20px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s, transform 0.25s;
+    z-index: 100;
+    max-width: 90vw;
+    text-align: center;
+}
+
+#toast.visivel {
+    opacity: 1;
+    transform: translate(-50%, 0);
 }
 
 .diario-total {
