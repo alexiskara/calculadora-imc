@@ -5,7 +5,7 @@ body {
     align-items: center;
     min-height: 100vh;
     margin: 0;
-    padding: 20px 0;
+    padding: 20px 10px;
     background: linear-gradient(135deg, #6a11cb, #2575fc);
     color: #fff;
     box-sizing: border-box;
@@ -18,7 +18,15 @@ body {
     border-radius: 15px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
     text-align: center;
-    width: 400px;
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+}
+
+@media (max-width: 420px) {
+    .container {
+        padding: 25px 16px;
+    }
 }
 
 h1 {
@@ -42,8 +50,8 @@ h1 {
     background: transparent;
     color: #666;
     border: none;
-    padding: 12px;
-    font-size: 16px;
+    padding: 12px 6px;
+    font-size: 15px;
     font-weight: bold;
     border-radius: 8px;
     cursor: pointer;
@@ -102,6 +110,7 @@ button {
     cursor: pointer;
     transition: background 0.3s;
     width: 100%;
+    font-family: inherit;
 }
 
 button:hover {
@@ -160,6 +169,77 @@ button:hover {
     margin: 8px 0;
 }
 
+/* ===== Barra visual do IMC (escala 15 a 40) ===== */
+.imc-barra {
+    margin: 18px 0 22px;
+}
+
+.imc-barra-track {
+    position: relative;
+    height: 12px;
+    border-radius: 6px;
+    /* Divisões: 18,5 -> 14% | 25 -> 40% | 30 -> 60% */
+    background: linear-gradient(to right,
+        #2575fc 0%, #2575fc 14%,
+        #2ecc71 14%, #2ecc71 40%,
+        #f1c40f 40%, #f1c40f 60%,
+        #e74c3c 60%, #e74c3c 100%);
+}
+
+.imc-barra-marcador {
+    position: absolute;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border: 3px solid #333;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.imc-barra-legendas {
+    position: relative;
+    height: 16px;
+    margin-top: 4px;
+}
+
+.imc-barra-legendas span {
+    position: absolute;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: #999;
+}
+
+.imc-barra-nomes {
+    display: flex;
+    font-size: 10px;
+    margin-top: 2px;
+    text-align: center;
+}
+
+.imc-barra-nomes .nome-abaixo {
+    width: 14%;
+    color: #2575fc;
+}
+
+.imc-barra-nomes .nome-ideal {
+    width: 26%;
+    color: #1e7e34;
+}
+
+.imc-barra-nomes .nome-sobre {
+    width: 20%;
+    color: #b8860b;
+}
+
+.imc-barra-nomes .nome-obesidade {
+    width: 40%;
+    color: #c0392b;
+}
+
+/* ===== Calorias: meta ===== */
 .calorias-alvo {
     text-align: center;
     font-size: 18px;
@@ -183,6 +263,7 @@ button:hover {
     color: #1e7e34;
 }
 
+/* ===== Macronutrientes ===== */
 .macros-titulo {
     font-weight: bold;
     margin: 15px 0 8px;
@@ -232,13 +313,117 @@ button:hover {
     color: #c0392b;
 }
 
+/* ===== Histórico: gráfico ===== */
+.grafico-titulo {
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 6px;
+}
+
+.grafico-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.grafico-grade {
+    stroke: #eee;
+    stroke-width: 1;
+}
+
+.grafico-eixo {
+    font-size: 10px;
+    fill: #999;
+    font-family: inherit;
+}
+
+.grafico-linha {
+    fill: none;
+    stroke: #2575fc;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.grafico-ponto {
+    fill: #2575fc;
+    stroke: #fff;
+    stroke-width: 2;
+}
+
+.grafico-rotulo {
+    font-size: 11px;
+    font-weight: bold;
+    fill: #333;
+    font-family: inherit;
+}
+
+.grafico-vazio {
+    text-align: center;
+    color: #999;
+}
+
+/* ===== Histórico: lista ===== */
+.hist-linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 4px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+}
+
+.hist-data {
+    color: #666;
+    flex: 1;
+}
+
+.hist-peso {
+    font-weight: bold;
+}
+
+.hist-delta {
+    font-size: 12px;
+    min-width: 70px;
+    text-align: right;
+}
+
+.hist-delta.subiu {
+    color: #c0392b;
+}
+
+.hist-delta.desceu {
+    color: #1e7e34;
+}
+
+.hist-delta.neutro {
+    color: #999;
+}
+
+.hist-remover {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    background: #f0f2f7;
+    color: #999;
+    font-size: 16px;
+    line-height: 1;
+    border-radius: 50%;
+    flex: none;
+}
+
+.hist-remover:hover {
+    background: #fdeaea;
+    color: #c0392b;
+}
+
+/* ===== Avisos e rodapé ===== */
 .aviso {
     margin-top: 15px;
     font-size: 12px;
     color: #999;
 }
 
-/* ===== Rodapé ===== */
 .logo {
     font-size: 20px;
     font-weight: bold;
@@ -259,4 +444,19 @@ button:hover {
 
 .footer a:hover {
     text-decoration: underline;
+}
+
+.btn-limpar {
+    display: block;
+    width: auto;
+    margin: 12px auto 0;
+    padding: 6px 14px;
+    font-size: 12px;
+    background: #f0f2f7;
+    color: #777;
+}
+
+.btn-limpar:hover {
+    background: #fdeaea;
+    color: #c0392b;
 }
