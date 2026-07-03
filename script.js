@@ -1,3 +1,12 @@
+// ===== PWA: registra o service worker (modo offline / app instalável) =====
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {
+            // sem service worker (ex.: aberto direto do arquivo), o app segue normal
+        });
+    });
+}
+
 // ===== Navegação entre abas =====
 function trocarAba(idAba, botao) {
     document.querySelectorAll('.tab-content').forEach(function (aba) {
@@ -36,6 +45,28 @@ function validarMedidas(altura, peso) {
 
 function mensagemErros(erros) {
     return '<div class="classificacao alerta">' + erros.join('<br>') + '</div>';
+}
+
+function escapeHTML(texto) {
+    const div = document.createElement('div');
+    div.textContent = texto;
+    return div.innerHTML;
+}
+
+function lerStorage(chave) {
+    try {
+        return localStorage.getItem(chave);
+    } catch (e) {
+        return null;
+    }
+}
+
+function gravarStorage(chave, valor) {
+    try {
+        localStorage.setItem(chave, valor);
+    } catch (e) {
+        // localStorage indisponível (modo privado etc.) — segue sem salvar
+    }
 }
 
 function classificarIMC(imc) {
@@ -97,9 +128,41 @@ function dataEstimada(semanas) {
     return 'aproximadamente em ' + texto;
 }
 
+// ===== Compartilhamento (Web Share API, com cópia como alternativa) =====
+const URL_APP = 'https://alexiskara.github.io/calculadora-imc/';
+const textosCompartilhar = { imc: '', calorias: '' };
+
+function botaoCompartilhar(tipo) {
+    return `<button type="button" class="btn-compartilhar" onclick="compartilhar('${tipo}')">Compartilhar resultado</button>`;
+}
+
+function compartilhar(tipo) {
+    const texto = textosCompartilhar[tipo];
+    if (!texto) return;
+    const completo = texto + '\n\nCalculado em ' + URL_APP;
+
+    if (navigator.share) {
+        navigator.share({ text: completo }).catch(function () {
+            // usuário cancelou o compartilhamento
+        });
+        return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(completo).then(function () {
+            alert('Resultado copiado! Cole onde quiser compartilhar.');
+        });
+        return;
+    }
+    window.open('https://wa.me/?text=' + encodeURIComponent(completo), '_blank');
+}
+
 // ===== Dados compartilhados entre abas + salvamento no navegador =====
 const CHAVE_STORAGE = 'imcProDados';
 const CHAVE_HISTORICO = 'imcProHistorico';
+const CHAVE_META = 'imcProMeta';
+const CHAVE_DIARIO = 'imcProDiario';
+const CHAVE_LEMBRETE = 'imcProLembrete';
+const CHAVE_ULTIMA_NOTIFICACAO = 'imcProUltimaNotif';
 
 // Grupos de campos que devem ficar sincronizados entre as abas
 const camposSincronizados = [
@@ -114,17 +177,13 @@ function salvarDados() {
     camposSalvos.forEach(function (id) {
         dados[id] = document.getElementById(id).value;
     });
-    try {
-        localStorage.setItem(CHAVE_STORAGE, JSON.stringify(dados));
-    } catch (e) {
-        // localStorage indisponível (modo privado etc.) — segue sem salvar
-    }
+    gravarStorage(CHAVE_STORAGE, JSON.stringify(dados));
 }
 
 function restaurarDados() {
     let dados;
     try {
-        dados = JSON.parse(localStorage.getItem(CHAVE_STORAGE));
+        dados = JSON.parse(lerStorage(CHAVE_STORAGE));
     } catch (e) {
         return;
     }
@@ -162,24 +221,29 @@ function iniciarSincronizacao() {
 }
 
 function limparDados() {
-    if (!confirm('Isso vai apagar todos os dados salvos, inclusive o histórico de peso. Deseja continuar?')) {
+    if (!confirm('Isso vai apagar todos os dados salvos, inclusive o histórico de peso e o diário alimentar. Deseja continuar?')) {
         return;
     }
-    try {
-        localStorage.removeItem(CHAVE_STORAGE);
-        localStorage.removeItem(CHAVE_HISTORICO);
-    } catch (e) {
-        // sem localStorage, nada a limpar
-    }
+    [CHAVE_STORAGE, CHAVE_HISTORICO, CHAVE_META, CHAVE_DIARIO, CHAVE_LEMBRETE, CHAVE_ULTIMA_NOTIFICACAO].forEach(function (chave) {
+        try {
+            localStorage.removeItem(chave);
+        } catch (e) {
+            // sem localStorage, nada a limpar
+        }
+    });
     document.querySelectorAll('input').forEach(function (campo) {
-        campo.value = '';
+        if (campo.type !== 'file') campo.value = '';
     });
     document.getElementById('sexo').selectedIndex = 0;
     document.getElementById('atividade').selectedIndex = 0;
     document.getElementById('ritmo').selectedIndex = 1;
+    document.getElementById('lembreteAtivo').checked = false;
     document.getElementById('resultado').innerHTML = '';
     document.getElementById('resultadoCalorias').innerHTML = '';
+    document.getElementById('resultadosBusca').innerHTML = '';
     renderizarHistorico();
+    renderizarDiario();
+    verificarLembrete();
 }
 
 // ===== ABA 1: IMC =====
@@ -208,6 +272,9 @@ function calcularIMC() {
         mensagemPeso = 'Parabéns! Você já está dentro da faixa de peso ideal.';
     }
 
+    textosCompartilhar.imc = `Meu IMC é ${imc.toFixed(2)} (${classificacao.texto}). ` +
+        `A faixa de peso ideal para minha altura é de ${faixa.minimo.toFixed(1)} kg a ${faixa.maximo.toFixed(1)} kg.`;
+
     resultadoDiv.innerHTML = `
         <div class="imc-valor">Seu IMC: <strong>${imc.toFixed(2)}</strong></div>
         <div class="classificacao ${classificacao.classe}">${classificacao.texto}</div>
@@ -216,6 +283,7 @@ function calcularIMC() {
             Peso ideal para sua altura: <strong>${faixa.minimo.toFixed(1)} kg a ${faixa.maximo.toFixed(1)} kg</strong>
         </div>
         <div class="mensagem">${mensagemPeso}</div>
+        ${botaoCompartilhar('imc')}
         <div class="aviso">* O IMC é uma referência para adultos e não substitui avaliação médica.</div>
     `;
 }
@@ -223,27 +291,32 @@ function calcularIMC() {
 // ===== ABA 2: CALORIAS =====
 
 // Distribuição de macronutrientes: 30% proteína, 40% carboidrato, 30% gordura
-function montarMacros(calorias) {
-    const proteina = Math.round((calorias * 0.30) / 4); // 4 kcal por grama
-    const carboidrato = Math.round((calorias * 0.40) / 4); // 4 kcal por grama
-    const gordura = Math.round((calorias * 0.30) / 9); // 9 kcal por grama
+function metasMacros(calorias) {
+    return {
+        proteina: Math.round((calorias * 0.30) / 4), // 4 kcal por grama
+        carboidrato: Math.round((calorias * 0.40) / 4), // 4 kcal por grama
+        gordura: Math.round((calorias * 0.30) / 9) // 9 kcal por grama
+    };
+}
 
+function montarMacros(calorias) {
+    const m = metasMacros(calorias);
     return `
         <div class="macros-titulo">Distribuição sugerida de macronutrientes:</div>
         <div class="macros">
             <div class="macro proteina">
                 <div class="macro-nome">Proteínas</div>
-                <div class="macro-valor">${proteina} g</div>
+                <div class="macro-valor">${m.proteina} g</div>
                 <div class="macro-pct">30%</div>
             </div>
             <div class="macro carboidrato">
                 <div class="macro-nome">Carboidratos</div>
-                <div class="macro-valor">${carboidrato} g</div>
+                <div class="macro-valor">${m.carboidrato} g</div>
                 <div class="macro-pct">40%</div>
             </div>
             <div class="macro gordura">
                 <div class="macro-nome">Gorduras</div>
-                <div class="macro-valor">${gordura} g</div>
+                <div class="macro-valor">${m.gordura} g</div>
                 <div class="macro-pct">30%</div>
             </div>
         </div>
@@ -323,6 +396,7 @@ function calcularCalorias() {
 
     let objetivo;
     let caloriasAlvo;
+    let resumoCompartilhar;
 
     if (pesoAlvo < peso - 0.05) {
         // Perder peso
@@ -352,6 +426,7 @@ function calcularCalorias() {
             <div class="calorias-alvo perder">Coma cerca de <strong>${Math.round(caloriasAlvo)} kcal/dia</strong></div>
             <div class="mensagem">Nesse ritmo (~${ritmoReal.toFixed(2)} kg/semana), você atingiria a meta em cerca de <strong>${semanas} semana(s)</strong> — ${dataEstimada(semanas)}.</div>
         `;
+        resumoCompartilhar = `Para perder ${kgPerder.toFixed(1)} kg e chegar ${rotuloAlvo}, preciso comer cerca de ${Math.round(caloriasAlvo)} kcal/dia. Meta prevista para daqui a ${semanas} semana(s).`;
     } else if (pesoAlvo > peso + 0.05) {
         // Ganhar peso
         const kgGanhar = pesoAlvo - peso;
@@ -362,13 +437,19 @@ function calcularCalorias() {
             <div class="calorias-alvo ganhar">Coma cerca de <strong>${Math.round(caloriasAlvo)} kcal/dia</strong></div>
             <div class="mensagem">Nesse ritmo (~${ritmoSemanal.toFixed(2)} kg/semana), você atingiria a meta em cerca de <strong>${semanas} semana(s)</strong> — ${dataEstimada(semanas)}.</div>
         `;
+        resumoCompartilhar = `Para ganhar ${kgGanhar.toFixed(1)} kg e chegar ${rotuloAlvo}, preciso comer cerca de ${Math.round(caloriasAlvo)} kcal/dia. Meta prevista para daqui a ${semanas} semana(s).`;
     } else {
         caloriasAlvo = manutencao;
         objetivo = `
             <div class="mensagem">${usandoMeta ? 'Você já está no peso desejado!' : 'Você já está no peso ideal!'}</div>
             <div class="calorias-alvo manter">Para manter o peso, coma cerca de <strong>${Math.round(caloriasAlvo)} kcal/dia</strong></div>
         `;
+        resumoCompartilhar = `Já estou no meu peso! Para manter, preciso comer cerca de ${Math.round(caloriasAlvo)} kcal/dia.`;
     }
+
+    // Guarda a meta calórica para o diário alimentar
+    gravarStorage(CHAVE_META, JSON.stringify({ calorias: Math.round(caloriasAlvo) }));
+    textosCompartilhar.calorias = resumoCompartilhar;
 
     resultadoDiv.innerHTML = `
         ${avisos}
@@ -377,15 +458,202 @@ function calcularCalorias() {
         <hr>
         ${objetivo}
         ${montarMacros(caloriasAlvo)}
+        ${botaoCompartilhar('calorias')}
         <div class="aviso">* Valores estimados. Consulte um nutricionista para um plano personalizado.</div>
     `;
+
+    renderizarDiario();
 }
 
-// ===== ABA 3: HISTÓRICO DE PESO =====
+// ===== ABA 3: DIÁRIO ALIMENTAR (busca via Open Food Facts) =====
+let resultadosBuscaAtual = [];
+
+function carregarDiario() {
+    try {
+        const diario = JSON.parse(lerStorage(CHAVE_DIARIO));
+        if (diario && diario.data === dataHojeISO() && Array.isArray(diario.itens)) {
+            return diario;
+        }
+    } catch (e) {
+        // diário corrompido ou de outro dia: começa um novo
+    }
+    return { data: dataHojeISO(), itens: [] };
+}
+
+function salvarDiario(diario) {
+    gravarStorage(CHAVE_DIARIO, JSON.stringify(diario));
+}
+
+function buscarAlimento() {
+    const termo = document.getElementById('buscaAlimento').value.trim();
+    const div = document.getElementById('resultadosBusca');
+
+    if (termo.length < 2) {
+        div.innerHTML = mensagemErros(['Digite pelo menos 2 letras para buscar.']);
+        return;
+    }
+
+    div.innerHTML = '<div class="mensagem busca-status">Buscando alimentos…</div>';
+
+    const url = 'https://br.openfoodfacts.org/cgi/search.pl?action=process&json=1&search_simple=1&page_size=8' +
+        '&fields=product_name,brands,nutriments&search_terms=' + encodeURIComponent(termo);
+
+    fetch(url)
+        .then(function (resposta) { return resposta.json(); })
+        .then(function (dados) {
+            const produtos = (dados.products || []).filter(function (p) {
+                return p.product_name && p.nutriments && p.nutriments['energy-kcal_100g'] !== undefined;
+            });
+
+            if (produtos.length === 0) {
+                div.innerHTML = '<div class="mensagem busca-status">Nenhum alimento com dados nutricionais encontrado. Tente outro termo (em português ou inglês).</div>';
+                return;
+            }
+
+            resultadosBuscaAtual = produtos.map(function (p) {
+                return {
+                    nome: p.product_name + (p.brands ? ' — ' + p.brands.split(',')[0].trim() : ''),
+                    kcal: parseFloat(p.nutriments['energy-kcal_100g']) || 0,
+                    prot: parseFloat(p.nutriments['proteins_100g']) || 0,
+                    carb: parseFloat(p.nutriments['carbohydrates_100g']) || 0,
+                    gord: parseFloat(p.nutriments['fat_100g']) || 0
+                };
+            });
+
+            let html = '<div class="busca-fonte">Fonte: Open Food Facts · valores por 100 g</div>';
+            resultadosBuscaAtual.forEach(function (item, indice) {
+                html += `
+                    <div class="alimento-linha">
+                        <div class="alimento-info">
+                            <div class="alimento-nome">${escapeHTML(item.nome)}</div>
+                            <div class="alimento-macros">${Math.round(item.kcal)} kcal · P ${item.prot.toFixed(1)} g · C ${item.carb.toFixed(1)} g · G ${item.gord.toFixed(1)} g</div>
+                        </div>
+                        <button type="button" class="btn-add" title="Adicionar ao diário" onclick="adicionarAlimento(${indice})">+</button>
+                    </div>`;
+            });
+            div.innerHTML = html;
+        })
+        .catch(function () {
+            div.innerHTML = mensagemErros(['Não foi possível buscar agora. Verifique sua conexão e tente novamente.']);
+        });
+}
+
+function adicionarAlimento(indice) {
+    const item = resultadosBuscaAtual[indice];
+    if (!item) return;
+    const diario = carregarDiario();
+    diario.itens.push({
+        nome: item.nome,
+        gramas: 100,
+        kcal: item.kcal,
+        prot: item.prot,
+        carb: item.carb,
+        gord: item.gord
+    });
+    salvarDiario(diario);
+    renderizarDiario();
+}
+
+function atualizarGramas(indice, valor) {
+    const gramas = parseFloat(valor);
+    const diario = carregarDiario();
+    if (!diario.itens[indice]) return;
+    diario.itens[indice].gramas = isNaN(gramas) || gramas < 1 ? 1 : Math.min(gramas, 3000);
+    salvarDiario(diario);
+    renderizarDiario();
+}
+
+function removerAlimento(indice) {
+    const diario = carregarDiario();
+    diario.itens.splice(indice, 1);
+    salvarDiario(diario);
+    renderizarDiario();
+}
+
+function limparDiario() {
+    if (!confirm('Limpar todos os alimentos de hoje?')) return;
+    salvarDiario({ data: dataHojeISO(), itens: [] });
+    renderizarDiario();
+}
+
+function renderizarDiario() {
+    const diario = carregarDiario();
+    const metaDiv = document.getElementById('metaDia');
+    const listaDiv = document.getElementById('diarioDia');
+
+    let metaCalorias = null;
+    try {
+        const meta = JSON.parse(lerStorage(CHAVE_META));
+        if (meta && meta.calorias > 0) metaCalorias = meta.calorias;
+    } catch (e) {
+        // sem meta definida ainda
+    }
+
+    // Totais consumidos
+    const total = { kcal: 0, prot: 0, carb: 0, gord: 0 };
+    diario.itens.forEach(function (item) {
+        const fator = item.gramas / 100;
+        total.kcal += item.kcal * fator;
+        total.prot += item.prot * fator;
+        total.carb += item.carb * fator;
+        total.gord += item.gord * fator;
+    });
+
+    // Painel de meta / progresso do dia
+    if (metaCalorias) {
+        const percentual = Math.round((total.kcal / metaCalorias) * 100);
+        const largura = Math.min(percentual, 100);
+        const estourou = total.kcal > metaCalorias;
+        const restante = Math.round(metaCalorias - total.kcal);
+        metaDiv.innerHTML = `
+            <div class="progresso-texto"><strong>${Math.round(total.kcal)}</strong> de <strong>${metaCalorias}</strong> kcal (${percentual}%)</div>
+            <div class="progresso-track">
+                <div class="progresso-fill ${estourou ? 'estourou' : ''}" style="width: ${largura}%"></div>
+            </div>
+            <div class="progresso-sub">${estourou
+                ? 'Você passou ' + Math.abs(restante) + ' kcal da sua meta hoje.'
+                : 'Ainda cabem ' + restante + ' kcal hoje.'}</div>
+        `;
+    } else {
+        metaDiv.innerHTML = '<div class="mensagem busca-status">Calcule suas calorias na aba <strong>Calorias</strong> para definir a meta diária e acompanhar o progresso aqui.</div>';
+    }
+
+    // Lista de alimentos do dia
+    if (diario.itens.length === 0) {
+        listaDiv.innerHTML = '<div class="mensagem busca-status">Nenhum alimento registrado hoje. Busque acima e adicione com o botão +.</div>';
+        return;
+    }
+
+    let linhas = '';
+    diario.itens.forEach(function (item, indice) {
+        const fator = item.gramas / 100;
+        linhas += `
+            <div class="diario-linha">
+                <div class="alimento-info">
+                    <div class="alimento-nome">${escapeHTML(item.nome)}</div>
+                    <div class="alimento-macros">${Math.round(item.kcal * fator)} kcal · P ${(item.prot * fator).toFixed(1)} g · C ${(item.carb * fator).toFixed(1)} g · G ${(item.gord * fator).toFixed(1)} g</div>
+                </div>
+                <div class="diario-gramas">
+                    <input type="number" value="${item.gramas}" min="1" max="3000" onchange="atualizarGramas(${indice}, this.value)"> g
+                </div>
+                <button type="button" class="hist-remover" title="Remover" onclick="removerAlimento(${indice})">×</button>
+            </div>`;
+    });
+
+    linhas += `
+        <div class="diario-total">
+            Total: <strong>${Math.round(total.kcal)} kcal</strong> · P ${total.prot.toFixed(1)} g · C ${total.carb.toFixed(1)} g · G ${total.gord.toFixed(1)} g
+        </div>
+        <button type="button" class="btn-secundario btn-limpar-dia" onclick="limparDiario()">Limpar o dia</button>
+    `;
+    listaDiv.innerHTML = linhas;
+}
+
+// ===== ABA 4: HISTÓRICO DE PESO =====
 
 function carregarHistorico() {
     try {
-        const historico = JSON.parse(localStorage.getItem(CHAVE_HISTORICO));
+        const historico = JSON.parse(lerStorage(CHAVE_HISTORICO));
         return Array.isArray(historico) ? historico : [];
     } catch (e) {
         return [];
@@ -393,11 +661,7 @@ function carregarHistorico() {
 }
 
 function salvarHistorico(historico) {
-    try {
-        localStorage.setItem(CHAVE_HISTORICO, JSON.stringify(historico));
-    } catch (e) {
-        // sem localStorage, o histórico vive só nesta sessão
-    }
+    gravarStorage(CHAVE_HISTORICO, JSON.stringify(historico));
 }
 
 function dataHojeISO() {
@@ -436,6 +700,7 @@ function registrarPeso() {
 
     salvarHistorico(historico);
     renderizarHistorico();
+    verificarLembrete();
 }
 
 function removerRegistro(dataISO) {
@@ -444,6 +709,113 @@ function removerRegistro(dataISO) {
     });
     salvarHistorico(historico);
     renderizarHistorico();
+}
+
+// ===== Exportar / importar histórico em CSV =====
+function exportarCSV() {
+    const historico = carregarHistorico();
+    if (historico.length === 0) {
+        alert('Nenhuma pesagem registrada para exportar.');
+        return;
+    }
+    // BOM + ponto e vírgula: abre direto no Excel em português
+    let csv = '\uFEFFdata;peso\n';
+    historico.forEach(function (registro) {
+        csv += formatarDataBR(registro.data) + ';' + String(registro.peso).replace('.', ',') + '\n';
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'historico-peso.csv';
+    link.click();
+    URL.revokeObjectURL(link.href);
+}
+
+function importarCSV(input) {
+    const arquivo = input.files[0];
+    if (!arquivo) return;
+
+    const leitor = new FileReader();
+    leitor.onload = function () {
+        const linhas = String(leitor.result).replace(/^\uFEFF/, '').split(/\r?\n/);
+        const historico = carregarHistorico();
+        let importados = 0;
+
+        linhas.forEach(function (linha) {
+            const partes = linha.split(/[;,\t]/);
+            if (partes.length < 2) return;
+
+            let data = partes[0].trim();
+            const brasileira = data.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            if (brasileira) {
+                data = brasileira[3] + '-' + brasileira[2] + '-' + brasileira[1];
+            }
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) return;
+
+            const peso = parseFloat(partes[1].trim().replace(',', '.'));
+            if (isNaN(peso) || peso < 20 || peso > 400) return;
+
+            const existente = historico.find(function (registro) {
+                return registro.data === data;
+            });
+            if (existente) {
+                existente.peso = peso;
+            } else {
+                historico.push({ data: data, peso: peso });
+            }
+            importados++;
+        });
+
+        historico.sort(function (a, b) {
+            return a.data < b.data ? -1 : 1;
+        });
+        salvarHistorico(historico);
+        renderizarHistorico();
+        alert(importados + ' registro(s) importado(s).');
+    };
+    leitor.readAsText(arquivo);
+    input.value = '';
+}
+
+// ===== Lembrete diário de pesagem =====
+function iniciarLembrete() {
+    const caixa = document.getElementById('lembreteAtivo');
+    caixa.checked = lerStorage(CHAVE_LEMBRETE) === '1';
+
+    caixa.addEventListener('change', function () {
+        gravarStorage(CHAVE_LEMBRETE, caixa.checked ? '1' : '0');
+        if (caixa.checked && 'Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission().then(verificarLembrete);
+        }
+        verificarLembrete();
+    });
+
+    verificarLembrete();
+}
+
+function verificarLembrete() {
+    const banner = document.getElementById('lembreteBanner');
+    banner.innerHTML = '';
+
+    if (lerStorage(CHAVE_LEMBRETE) !== '1') return;
+
+    const hoje = dataHojeISO();
+    const jaRegistrou = carregarHistorico().some(function (registro) {
+        return registro.data === hoje;
+    });
+    if (jaRegistrou) return;
+
+    banner.innerHTML = '<div class="classificacao atencao">Você ainda não registrou seu peso hoje.</div>';
+
+    // Uma notificação do navegador por dia, quando permitido
+    if ('Notification' in window && Notification.permission === 'granted' && lerStorage(CHAVE_ULTIMA_NOTIFICACAO) !== hoje) {
+        gravarStorage(CHAVE_ULTIMA_NOTIFICACAO, hoje);
+        try {
+            new Notification('IMC Pro', { body: 'Você ainda não registrou seu peso hoje. Que tal se pesar agora?', icon: 'icons/icon-192.png' });
+        } catch (e) {
+            // alguns navegadores móveis só permitem notificação via service worker
+        }
+    }
 }
 
 // Gráfico de linha em SVG puro: peso (kg) ao longo das datas registradas
@@ -565,3 +937,5 @@ function renderizarHistorico() {
 restaurarDados();
 iniciarSincronizacao();
 renderizarHistorico();
+renderizarDiario();
+iniciarLembrete();

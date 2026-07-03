@@ -50,8 +50,8 @@ h1 {
     background: transparent;
     color: #666;
     border: none;
-    padding: 12px 6px;
-    font-size: 15px;
+    padding: 10px 2px;
+    font-size: 13px;
     font-weight: bold;
     border-radius: 8px;
     cursor: pointer;
@@ -459,4 +459,182 @@ button:hover {
 .btn-limpar:hover {
     background: #fdeaea;
     color: #c0392b;
+}
+
+/* ===== Botões secundários (CSV, limpar dia) ===== */
+.btn-secundario {
+    background: #f0f2f7;
+    color: #555;
+    font-size: 14px;
+    padding: 10px;
+}
+
+.btn-secundario:hover {
+    background: #e2e6f0;
+    color: #333;
+}
+
+.hist-acoes {
+    display: flex;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+/* ===== Compartilhar ===== */
+.btn-compartilhar {
+    display: block;
+    width: auto;
+    margin: 14px auto 0;
+    padding: 10px 20px;
+    font-size: 14px;
+}
+
+/* ===== Lembrete de pesagem ===== */
+.lembrete-linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+    text-align: left;
+}
+
+.lembrete-linha input {
+    width: auto;
+    accent-color: #2575fc;
+}
+
+#lembreteBanner .classificacao {
+    margin-bottom: 10px;
+}
+
+/* ===== Diário alimentar ===== */
+.subtitulo {
+    font-size: 18px;
+    color: #333;
+    margin: 25px 0 5px;
+}
+
+.busca-linha {
+    display: flex;
+    gap: 8px;
+}
+
+.busca-linha input {
+    flex: 1;
+}
+
+.btn-buscar {
+    width: auto;
+    padding: 12px 18px;
+    flex: none;
+}
+
+.busca-status {
+    text-align: center;
+    color: #999;
+}
+
+.busca-fonte {
+    font-size: 11px;
+    color: #999;
+    margin-bottom: 6px;
+}
+
+.alimento-linha,
+.diario-linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 2px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.alimento-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.alimento-nome {
+    font-size: 14px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.alimento-macros {
+    font-size: 12px;
+    color: #888;
+}
+
+.btn-add {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    font-size: 20px;
+    line-height: 1;
+    border-radius: 50%;
+    flex: none;
+}
+
+.diario-gramas {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: #666;
+    flex: none;
+}
+
+.diario-gramas input {
+    width: 62px;
+    padding: 6px;
+    font-size: 13px;
+    text-align: right;
+}
+
+.diario-total {
+    padding: 10px 2px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.btn-limpar-dia {
+    margin-top: 8px;
+    font-size: 12px;
+    padding: 8px;
+}
+
+/* ===== Progresso do dia (meta calórica) ===== */
+.progresso-texto {
+    text-align: center;
+    font-size: 16px;
+}
+
+.progresso-track {
+    height: 12px;
+    border-radius: 6px;
+    background: #f0f2f7;
+    margin: 8px 0 6px;
+    overflow: hidden;
+}
+
+.progresso-fill {
+    height: 100%;
+    border-radius: 6px;
+    background: #2575fc;
+    transition: width 0.4s;
+}
+
+.progresso-fill.estourou {
+    background: #e74c3c;
+}
+
+.progresso-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #888;
 }

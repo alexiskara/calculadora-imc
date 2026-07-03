@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de IMC</title>
+    <meta name="theme-color" content="#6a11cb">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
@@ -17,6 +21,7 @@
         <div class="tabs" role="tablist">
             <button class="tab-btn active" data-tab="aba-imc" role="tab" aria-selected="true" onclick="trocarAba('aba-imc', this)">IMC</button>
             <button class="tab-btn" data-tab="aba-calorias" role="tab" aria-selected="false" onclick="trocarAba('aba-calorias', this)">Calorias</button>
+            <button class="tab-btn" data-tab="aba-alimentos" role="tab" aria-selected="false" onclick="trocarAba('aba-alimentos', this)">Alimentos</button>
             <button class="tab-btn" data-tab="aba-historico" role="tab" aria-selected="false" onclick="trocarAba('aba-historico', this)">Histórico</button>
         </div>
 
@@ -87,9 +92,28 @@
             <div class="result" id="resultadoCalorias"></div>
         </div>
 
-        <!-- ABA 3: HISTÓRICO -->
+        <!-- ABA 3: ALIMENTOS (diário alimentar) -->
+        <div class="tab-content" id="aba-alimentos">
+            <h1>Diário Alimentar</h1>
+            <div class="result" id="metaDia"></div>
+            <form onsubmit="event.preventDefault(); buscarAlimento();">
+                <div class="input-group">
+                    <label for="buscaAlimento">Buscar alimento:</label>
+                    <div class="busca-linha">
+                        <input type="text" id="buscaAlimento" placeholder="Ex: arroz integral">
+                        <button type="submit" class="btn-buscar">Buscar</button>
+                    </div>
+                </div>
+            </form>
+            <div class="result" id="resultadosBusca"></div>
+            <h2 class="subtitulo">Consumido hoje</h2>
+            <div class="result" id="diarioDia"></div>
+        </div>
+
+        <!-- ABA 4: HISTÓRICO -->
         <div class="tab-content" id="aba-historico">
             <h1>Histórico de Peso</h1>
+            <div id="lembreteBanner"></div>
             <form onsubmit="event.preventDefault(); registrarPeso();">
                 <div class="input-group">
                     <label for="pesoHistorico">Peso de hoje (kg):</label>
@@ -97,8 +121,17 @@
                 </div>
                 <button type="submit">Registrar peso de hoje</button>
             </form>
+            <label class="lembrete-linha">
+                <input type="checkbox" id="lembreteAtivo">
+                Lembrar-me de registrar o peso diariamente
+            </label>
             <div class="result" id="grafico"></div>
             <div class="result" id="listaHistorico"></div>
+            <div class="hist-acoes">
+                <button type="button" class="btn-secundario" onclick="exportarCSV()">Exportar CSV</button>
+                <button type="button" class="btn-secundario" onclick="document.getElementById('importarArquivo').click()">Importar CSV</button>
+                <input type="file" id="importarArquivo" accept=".csv,text/csv" hidden onchange="importarCSV(this)">
+            </div>
         </div>
 
         <div class="footer">
