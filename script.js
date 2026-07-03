@@ -482,19 +482,47 @@ function calcularCalorias() {
     renderizarDiario();
 }
 
-// ===== ABA 3: DIÁRIO ALIMENTAR (busca via Open Food Facts) =====
+// ===== ABA 3: DIÁRIO DO DIA (alimentação + exercícios) =====
+
+// Gasto calórico por atividade em METs (Compêndio de Atividades Físicas).
+// 1 MET ≈ 1 kcal por kg de peso por hora.
+const ATIVIDADES = [
+    { nome: 'Caminhada leve', met: 3.0 },
+    { nome: 'Caminhada rápida', met: 4.5 },
+    { nome: 'Corrida leve (8 km/h)', met: 8.0 },
+    { nome: 'Corrida (10 km/h)', met: 10.0 },
+    { nome: 'Bicicleta (passeio)', met: 5.5 },
+    { nome: 'Bicicleta (ritmo forte)', met: 8.0 },
+    { nome: 'Natação', met: 7.0 },
+    { nome: 'Hidroginástica', met: 5.5 },
+    { nome: 'Musculação', met: 4.0 },
+    { nome: 'Futebol', met: 7.0 },
+    { nome: 'Dança', met: 5.0 },
+    { nome: 'Pular corda', met: 11.0 },
+    { nome: 'Yoga / alongamento', met: 2.5 },
+    { nome: 'Serviços domésticos', met: 3.5 }
+];
+
 let resultadosBuscaAtual = [];
+
+// Peso atual do usuário (campo sincronizado entre as abas)
+function pesoAtualUsuario() {
+    const peso = parseFloat(document.getElementById('peso').value);
+    if (!isNaN(peso) && peso >= 20 && peso <= 400) return peso;
+    return null;
+}
 
 function carregarDiario() {
     try {
         const diario = JSON.parse(lerStorage(CHAVE_DIARIO));
         if (diario && diario.data === dataHojeISO() && Array.isArray(diario.itens)) {
+            if (!Array.isArray(diario.exercicios)) diario.exercicios = [];
             return diario;
         }
     } catch (e) {
         // diário corrompido ou de outro dia: começa um novo
     }
-    return { data: dataHojeISO(), itens: [] };
+    return { data: dataHojeISO(), itens: [], exercicios: [] };
 }
 
 function salvarDiario(diario) {
@@ -588,9 +616,64 @@ function removerAlimento(indice) {
 }
 
 function limparDiario() {
-    if (!confirm('Limpar todos os alimentos de hoje?')) return;
-    salvarDiario({ data: dataHojeISO(), itens: [] });
+    if (!confirm('Limpar todos os alimentos e exercícios de hoje?')) return;
+    salvarDiario({ data: dataHojeISO(), itens: [], exercicios: [] });
     renderizarDiario();
+}
+
+// ===== Exercícios do dia =====
+function preencherAtividades() {
+    const select = document.getElementById('exercicioTipo');
+    ATIVIDADES.forEach(function (atividade, indice) {
+        const opcao = document.createElement('option');
+        opcao.value = indice;
+        opcao.textContent = atividade.nome;
+        select.appendChild(opcao);
+    });
+}
+
+function adicionarExercicio() {
+    const indice = parseInt(document.getElementById('exercicioTipo').value, 10);
+    const minutos = parseFloat(document.getElementById('exercicioMinutos').value);
+    const atividade = ATIVIDADES[indice];
+    const div = document.getElementById('exerciciosDia');
+
+    if (!atividade) return;
+    if (isNaN(minutos) || minutos < 1 || minutos > 600) {
+        div.innerHTML = mensagemErros(['Informe a duração entre 1 e 600 minutos.']);
+        return;
+    }
+    const peso = pesoAtualUsuario();
+    if (!peso) {
+        div.innerHTML = mensagemErros(['Preencha seu peso na aba IMC para calcular o gasto calórico.']);
+        return;
+    }
+
+    const kcal = atividade.met * peso * (minutos / 60);
+    const diario = carregarDiario();
+    diario.exercicios.push({
+        nome: atividade.nome,
+        minutos: Math.round(minutos),
+        kcal: Math.round(kcal)
+    });
+    salvarDiario(diario);
+    document.getElementById('exercicioMinutos').value = '';
+    renderizarDiario();
+}
+
+function removerExercicio(indice) {
+    const diario = carregarDiario();
+    diario.exercicios.splice(indice, 1);
+    salvarDiario(diario);
+    renderizarDiario();
+}
+
+// Equivalência de um excesso calórico em minutos de exercício
+function equivalenciaExercicio(kcalExcesso, peso) {
+    if (!peso || kcalExcesso <= 0) return '';
+    const minCaminhada = Math.round((kcalExcesso * 60) / (4.5 * peso));
+    const minCorrida = Math.round((kcalExcesso * 60) / (10.0 * peso));
+    return `Para compensar: ~${minCaminhada} min de caminhada rápida ou ~${minCorrida} min de corrida.`;
 }
 
 function renderizarDiario() {
@@ -616,20 +699,34 @@ function renderizarDiario() {
         total.gord += item.gord * fator;
     });
 
+    // Calorias queimadas em exercícios: viram crédito na meta do dia
+    const queimado = diario.exercicios.reduce(function (soma, exercicio) {
+        return soma + exercicio.kcal;
+    }, 0);
+
     // Painel de meta / progresso do dia
     if (metaCalorias) {
-        const percentual = Math.round((total.kcal / metaCalorias) * 100);
+        const metaAjustada = metaCalorias + queimado;
+        const percentual = Math.round((total.kcal / metaAjustada) * 100);
         const largura = Math.min(percentual, 100);
-        const estourou = total.kcal > metaCalorias;
-        const restante = Math.round(metaCalorias - total.kcal);
+        const estourou = total.kcal > metaAjustada;
+        const restante = Math.round(metaAjustada - total.kcal);
+        const notaExercicio = queimado > 0
+            ? `<div class="progresso-sub">Meta ${metaCalorias} kcal + ${queimado} kcal queimadas em exercício</div>`
+            : '';
+        const equivalencia = estourou
+            ? `<div class="progresso-sub">${equivalenciaExercicio(Math.abs(restante), pesoAtualUsuario())}</div>`
+            : '';
         metaDiv.innerHTML = `
-            <div class="progresso-texto"><strong>${Math.round(total.kcal)}</strong> de <strong>${metaCalorias}</strong> kcal (${percentual}%)</div>
+            <div class="progresso-texto"><strong>${Math.round(total.kcal)}</strong> de <strong>${metaAjustada}</strong> kcal (${percentual}%)</div>
             <div class="progresso-track">
                 <div class="progresso-fill ${estourou ? 'estourou' : ''}" style="width: ${largura}%"></div>
             </div>
+            ${notaExercicio}
             <div class="progresso-sub">${estourou
                 ? 'Você passou ' + Math.abs(restante) + ' kcal da sua meta hoje.'
                 : 'Ainda cabem ' + restante + ' kcal hoje.'}</div>
+            ${equivalencia}
         `;
     } else {
         metaDiv.innerHTML = '<div class="mensagem busca-status">Calcule suas calorias na aba <strong>Calorias</strong> para definir a meta diária e acompanhar o progresso aqui.</div>';
@@ -638,32 +735,56 @@ function renderizarDiario() {
     // Lista de alimentos do dia
     if (diario.itens.length === 0) {
         listaDiv.innerHTML = '<div class="mensagem busca-status">Nenhum alimento registrado hoje. Busque acima e adicione com o botão +.</div>';
+    } else {
+        let linhas = '';
+        diario.itens.forEach(function (item, indice) {
+            const fator = item.gramas / 100;
+            linhas += `
+                <div class="diario-linha">
+                    <div class="alimento-info">
+                        <div class="alimento-nome">${escapeHTML(item.nome)}</div>
+                        <div class="alimento-macros">${Math.round(item.kcal * fator)} kcal · P ${(item.prot * fator).toFixed(1)} g · C ${(item.carb * fator).toFixed(1)} g · G ${(item.gord * fator).toFixed(1)} g</div>
+                    </div>
+                    <div class="diario-gramas">
+                        <input type="number" value="${item.gramas}" min="1" max="3000" onchange="atualizarGramas(${indice}, this.value)"> g
+                    </div>
+                    <button type="button" class="hist-remover" title="Remover" onclick="removerAlimento(${indice})">×</button>
+                </div>`;
+        });
+
+        linhas += `
+            <div class="diario-total">
+                Total: <strong>${Math.round(total.kcal)} kcal</strong> · P ${total.prot.toFixed(1)} g · C ${total.carb.toFixed(1)} g · G ${total.gord.toFixed(1)} g
+            </div>
+            <button type="button" class="btn-secundario btn-limpar-dia" onclick="limparDiario()">Limpar o dia</button>
+        `;
+        listaDiv.innerHTML = linhas;
+    }
+
+    // Lista de exercícios do dia
+    const exerciciosDiv = document.getElementById('exerciciosDia');
+    if (diario.exercicios.length === 0) {
+        exerciciosDiv.innerHTML = '<div class="mensagem busca-status">Nenhum exercício registrado hoje. Escolha a atividade e a duração acima.</div>';
         return;
     }
 
-    let linhas = '';
-    diario.itens.forEach(function (item, indice) {
-        const fator = item.gramas / 100;
-        linhas += `
+    let linhasExercicio = '';
+    diario.exercicios.forEach(function (exercicio, indice) {
+        linhasExercicio += `
             <div class="diario-linha">
                 <div class="alimento-info">
-                    <div class="alimento-nome">${escapeHTML(item.nome)}</div>
-                    <div class="alimento-macros">${Math.round(item.kcal * fator)} kcal · P ${(item.prot * fator).toFixed(1)} g · C ${(item.carb * fator).toFixed(1)} g · G ${(item.gord * fator).toFixed(1)} g</div>
+                    <div class="alimento-nome">${escapeHTML(exercicio.nome)}</div>
+                    <div class="alimento-macros">${exercicio.minutos} min · ${exercicio.kcal} kcal queimadas</div>
                 </div>
-                <div class="diario-gramas">
-                    <input type="number" value="${item.gramas}" min="1" max="3000" onchange="atualizarGramas(${indice}, this.value)"> g
-                </div>
-                <button type="button" class="hist-remover" title="Remover" onclick="removerAlimento(${indice})">×</button>
+                <button type="button" class="hist-remover" title="Remover" onclick="removerExercicio(${indice})">×</button>
             </div>`;
     });
-
-    linhas += `
-        <div class="diario-total">
-            Total: <strong>${Math.round(total.kcal)} kcal</strong> · P ${total.prot.toFixed(1)} g · C ${total.carb.toFixed(1)} g · G ${total.gord.toFixed(1)} g
+    linhasExercicio += `
+        <div class="diario-total queimadas">
+            Total queimado: <strong>${queimado} kcal</strong>
         </div>
-        <button type="button" class="btn-secundario btn-limpar-dia" onclick="limparDiario()">Limpar o dia</button>
     `;
-    listaDiv.innerHTML = linhas;
+    exerciciosDiv.innerHTML = linhasExercicio;
 }
 
 // ===== ABA 4: HISTÓRICO DE PESO =====
@@ -953,6 +1074,7 @@ function renderizarHistorico() {
 // ===== Inicialização (script carrega com defer, DOM já pronto) =====
 restaurarDados();
 iniciarSincronizacao();
+preencherAtividades();
 renderizarHistorico();
 renderizarDiario();
 iniciarLembrete();

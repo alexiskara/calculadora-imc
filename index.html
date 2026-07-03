@@ -21,7 +21,7 @@
         <div class="tabs" role="tablist">
             <button class="tab-btn active" data-tab="aba-imc" role="tab" aria-selected="true" onclick="trocarAba('aba-imc', this)">IMC</button>
             <button class="tab-btn" data-tab="aba-calorias" role="tab" aria-selected="false" onclick="trocarAba('aba-calorias', this)">Calorias</button>
-            <button class="tab-btn" data-tab="aba-alimentos" role="tab" aria-selected="false" onclick="trocarAba('aba-alimentos', this)">Alimentos</button>
+            <button class="tab-btn" data-tab="aba-alimentos" role="tab" aria-selected="false" onclick="trocarAba('aba-alimentos', this)">Diário</button>
             <button class="tab-btn" data-tab="aba-historico" role="tab" aria-selected="false" onclick="trocarAba('aba-historico', this)">Histórico</button>
         </div>
 
@@ -92,9 +92,9 @@
             <div class="result" id="resultadoCalorias"></div>
         </div>
 
-        <!-- ABA 3: ALIMENTOS (diário alimentar) -->
+        <!-- ABA 3: DIÁRIO (alimentação + exercícios do dia) -->
         <div class="tab-content" id="aba-alimentos">
-            <h1>Diário Alimentar</h1>
+            <h1>Diário do Dia</h1>
             <div class="result" id="metaDia"></div>
             <form onsubmit="event.preventDefault(); buscarAlimento();">
                 <div class="input-group">
@@ -108,6 +108,21 @@
             <div class="result" id="resultadosBusca"></div>
             <h2 class="subtitulo">Consumido hoje</h2>
             <div class="result" id="diarioDia"></div>
+            <h2 class="subtitulo">Exercícios de hoje</h2>
+            <form onsubmit="event.preventDefault(); adicionarExercicio();">
+                <div class="input-group">
+                    <label for="exercicioTipo">Atividade:</label>
+                    <select id="exercicioTipo"></select>
+                </div>
+                <div class="input-group">
+                    <label for="exercicioMinutos">Duração (minutos):</label>
+                    <div class="busca-linha">
+                        <input type="number" id="exercicioMinutos" placeholder="Ex: 30" min="1" max="600">
+                        <button type="submit" class="btn-buscar">Adicionar</button>
+                    </div>
+                </div>
+            </form>
+            <div class="result" id="exerciciosDia"></div>
         </div>
 
         <!-- ABA 4: HISTÓRICO -->

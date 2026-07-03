@@ -602,6 +602,10 @@ button:hover {
     text-align: center;
 }
 
+.diario-total.queimadas {
+    color: #1e7e34;
+}
+
 .btn-limpar-dia {
     margin-top: 8px;
     font-size: 12px;
